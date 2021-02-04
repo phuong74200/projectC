@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <winsock2.h>
+#include "ulities.c"
 
 #define PORT 8080
 
@@ -54,6 +55,10 @@ int main() {
         slog("init socket done");
         scanf("%s", &message);
         response = _request(message);
-        printf("%s\n", response);
+    
+        char itemName[100];
+        parseXML("name", response, &itemName);
+
+        printf("%s\n", itemName);
     }
 }

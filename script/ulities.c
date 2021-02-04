@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-char *getXMLValue(char *tag, char *XMLBuffer, char *tagValue) {
+char *parseXML(char *tag, char *XMLBuffer, char *tagValue) {
     char openTag[10];
     char closeTag[10];
 
@@ -48,22 +48,33 @@ char *getXMLValue(char *tag, char *XMLBuffer, char *tagValue) {
     return 0;
 }
 
+char *getFile(char *dir, char *value) {
+    char *buffer = 0;
+    long length;
+    FILE *f = fopen(dir, "rb");
+
+    if (f) {
+        fseek(f, 0, SEEK_END);
+        length = ftell(f);
+        fseek(f, 0, SEEK_SET);
+        buffer = malloc(length);
+        if (buffer) {
+            fread(value, 1, length, f);
+            printf("%s", value);
+        }
+        fclose(f);
+    }
+}
+
+/*
 int main() {
     char res[100];
     getXMLValue("h1", "<h1>Hello</h1><h1>fuong</h1><fuong>ProjectCUsername</fuong>", &res);
-    printf("%s", res);
+    printf("%s\n", res);
 
-    FILE *f = fopen("script\\client.c", "rb");
-    fseek(f, 0, SEEK_END);
-    long fsize = ftell(f);
-    fseek(f, 0, SEEK_SET); /* same as rewind(f); */
-
-    char *string = malloc(fsize + 1);
-    fread(string, 1, fsize, f);
-    printf("%s", string);
-    fclose(f);
-
-    string[fsize] = 0;
-
-    printf("%s", string);
+    char fileData[200];
+    getFile("script\\client.c", &fileData);
+    printf("%s", fileData);
+    getchar();
 }
+*/

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <winsock2.h>
+#include "ulities.c"
 
 #define PORT 8080
 
@@ -95,7 +96,8 @@ int main() {
         }
 
         if (strcmp(reqBuffer, "getProducts") == 0) {
-            char products[] = " <name>T - Shirt</name><price>100</price><sale>50</sale>";
+            char products[100];
+            getFile("database\\products\\sp1.xml", &products);
             send(newReq, products, sizeof(products), 0);
             closesocket(newReq);
         }
