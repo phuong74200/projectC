@@ -1,12 +1,3 @@
-#include <stdio.h>
-#include <winsock2.h>
-
-#define PORT 8080
-
-void slog(char *content) {
-    printf("[server]: %s.\n", content);
-}
-
 int main() {
     WSADATA wsaData;
 
@@ -45,7 +36,7 @@ int main() {
 
     address.sin_family = AF_INET;
     address.sin_port = htons(PORT);
-    address.sin_addr.s_addr = inet_addr("127.0.0.1");
+    address.sin_addr.s_addr = inet_addr("192.168.1.7");
 
     slog("Connectting to server");
 
@@ -55,11 +46,15 @@ int main() {
         slog("Connect success");
     }
 
-    char message[] = "fuong";
+    char message[] = "fuong74200";
+
+    scanf("%s", &message);
 
     send(initSocket, message, strlen(message), 0);
 
+    recv(initSocket, &message, 20, 0);
 
-    getchar();
+    printf("%s", message);
+
     return 0;
 }

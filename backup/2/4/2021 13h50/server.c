@@ -3,7 +3,6 @@
 
 #define PORT 8080
 
-
 void slog(char *content) {
     printf("[server]: %s.\n", content);
 }
@@ -61,22 +60,7 @@ int main() {
 
     char reqBuffer[1024];
 
-    char body[] =
-        "<html>"
-        "<head><title>ProjectC</title></head> \r\n"
-        "<body>\r\n"
-        "<h1>Hello World. ProjectC test content-length</h1>\r\n"
-        "<h1>Hello World. ProjectC test content-length</h1>\r\n"
-        "<h1>Hello World. ProjectC test content-length</h1>\r\n"
-        "</body>\r\n"
-        "</html>\r\n\n";
-
-    char header[4000] =
-        "HTTP/1.0 200 OK\r\n"
-        "Server: ProjectC\r\n"
-        "Content-Type: text/html\r\n"
-        "Accept-Ranges: bytes\r\n"
-        "\r\n";
+    char res[] = "response";
 
     while (1) {
         int socketAddrSize = sizeof(struct sockaddr);
@@ -94,11 +78,23 @@ int main() {
 
         recv(newReq, reqBuffer, sizeof(reqBuffer), 0);
 
-        send(newReq, header, sizeof(header), 0);
-        send(newReq, body, sizeof(body), 0);
+        // send(newReq, header, sizeof(header), 0);
+        // send(newReq, body, sizeof(body), 0);
+
+        // send(newReq, res, sizeof(res), 0);
 
         printf("[server]: %s\n", reqBuffer);
 
+        // Write Events following
+
+        reqBuffer[strlen(reqBuffer)];
+
+        if (strcmp(reqBuffer, "eTest") == 0) {
+            send(newReq, "eTest", 300, 0);
+            closesocket(newReq);
+        }
+
+        send(newReq, "event not available...", 300, 0);
         closesocket(newReq);
     }
 

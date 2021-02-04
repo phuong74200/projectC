@@ -7,7 +7,7 @@
             "args": [
                 "${file}",
                 "-o",
-                "${fileDirname}\\${fileBasenameNoExtension}.exe",
+                "${workspaceFolder}\\${fileBasenameNoExtension}.exe",
                 "-lwsock32"
             ],
             "options": {
