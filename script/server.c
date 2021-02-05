@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <winsock2.h>
+
 #include "ulities.c"
 
 #define PORT 8080
@@ -56,7 +57,6 @@ int main() {
 
     bind(initSocket, (struct sockaddr *)&address, sizeof(address));
 
-    
     printf("[server]: listening: %s:%d\n", inet_ntoa(address.sin_addr), PORT);
     listen(initSocket, 5);
 
@@ -97,9 +97,8 @@ int main() {
         parseXML("api", reqBuffer, &reqApi);
         printf("[request-api]: %s\n", reqApi);
 
-
-        
         if (strcmp(reqApi, "getProducts") == 0) {
+            printf("accepted\n");
             char products[100];
             getFile("database\\products\\sp1.xml", &products);
             send(newReq, products, sizeof(products), 0);

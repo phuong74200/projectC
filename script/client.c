@@ -53,24 +53,29 @@ char *fetch(char message[200]) {
 void itemSlide(x, y) {
 }
 
-int main() {
+int main() {    
     char message[200];
     char *response;
-    slog("init socket done");
-    /*
+
+
+    parseXML("api", "fuong", &message);
+    printf("%s", message);
+
+    getchar();
+
     while (1) {
-        slog("init socket done");
+        slog("statrt");
         scanf("%s", &message);
-        response = _request(message);
-    
+        response = fetch(message);
+
         char itemName[100];
         parseXML("name", response, &itemName);
 
         printf("%s\n", itemName);
     }
-    */
 
-   setWindowSize(1280, 720);
+    /*
+    setWindowSize(1280, 720);
 
     char fetchData[] = "<api>getProducts</api><spi>sp1</spi>";
 
@@ -129,4 +134,5 @@ int main() {
     }
 
     getchar();
+    */
 }

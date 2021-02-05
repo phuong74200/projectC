@@ -3,7 +3,7 @@
 #include <string.h>
 #include <windows.h>
 
-char *parseXML(char *tag, char *XMLBuffer, char *tagValue) {
+int *parseXML(char *tag, char *XMLBuffer, char *tagValue) {
     char openTag[10];
     char closeTag[10];
 
@@ -19,7 +19,7 @@ char *parseXML(char *tag, char *XMLBuffer, char *tagValue) {
 
     int bufferLen = strlen(XMLBuffer);
 
-    int openTagPos = 0;
+    int openTagPos = -1;
 
     for (int i = 0; i < bufferLen; i++) {
         int cmp = memcmp(openTag, XMLBuffer + i, strlen(openTag));
@@ -29,7 +29,7 @@ char *parseXML(char *tag, char *XMLBuffer, char *tagValue) {
         }
     }
 
-    int closeTagPos = 0;
+    int closeTagPos = -1;
 
     for (int i = 0; i < bufferLen; i++) {
         int cmp = memcmp(closeTag, XMLBuffer + i, strlen(closeTag));
@@ -37,6 +37,10 @@ char *parseXML(char *tag, char *XMLBuffer, char *tagValue) {
             closeTagPos = i;
             break;
         }
+    }
+
+    if(openTagPos == -1 || closeTagPos == -1) {
+        return 0;
     }
 
     memset(tagValue, 0, sizeof(tagValue));
