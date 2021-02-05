@@ -1,5 +1,7 @@
+#include <conio.h>
 #include <stdio.h>
 #include <winsock2.h>
+
 #include "ulities.c"
 
 #define PORT 8080
@@ -10,7 +12,7 @@ void slog(char *content) {
     printf("[client]: %s.\n", content);
 }
 
-char *_request(char message[200]) {
+char *fetch(char message[200]) {
     WSADATA wsaData;
 
     SOCKET initSocket;
@@ -48,9 +50,14 @@ char *_request(char message[200]) {
     return response;
 }
 
+void itemSlide(x, y) {
+}
+
 int main() {
     char message[200];
     char *response;
+    slog("init socket done");
+    /*
     while (1) {
         slog("init socket done");
         scanf("%s", &message);
@@ -61,4 +68,65 @@ int main() {
 
         printf("%s\n", itemName);
     }
+    */
+
+   setWindowSize(1280, 720);
+
+    char fetchData[] = "<api>getProducts</api><spi>sp1</spi>";
+
+    for (int i = 0; i < 10; i++) {
+        setColor(i);
+        printf("Color %d\n", i);
+    }
+
+    printf("%s", fetch(fetchData));
+
+    char keypressed = 'i';
+
+    float refreshRate = 1000 / 60;
+
+    int x = 0;
+    int y = 0;
+
+    char graphics[1000][1000] = {
+        "000",
+        "000",
+    };
+
+    HideCursor();
+    while (1) {
+        for (int i = 0; i < strlen(graphics); i++) {
+            clrscr();
+            for (int j = 0; j < strlen(graphics[i]); i++) {
+                clrscr();
+                gotoxy(x + j, y + i);
+                setColor(11);
+                printf("ooo\n");
+                clearColor();
+            }
+        }
+
+        keypressed = getch();
+        if (keypressed == 72) {
+            y--;
+        }
+        if (keypressed == 75) {
+            x--;
+        }
+        if (keypressed == 80) {
+            y++;
+        }
+        if (keypressed == 77) {
+            x++;
+        }
+
+        if (keypressed) {
+            gotoxy(0, 0);
+            printf("%d", keypressed);
+        }
+
+        Sleep(refreshRate);
+    }
+
+    getchar();
 }

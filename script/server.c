@@ -56,6 +56,7 @@ int main() {
 
     bind(initSocket, (struct sockaddr *)&address, sizeof(address));
 
+    
     printf("[server]: listening: %s:%d\n", inet_ntoa(address.sin_addr), PORT);
     listen(initSocket, 5);
 
@@ -72,9 +73,10 @@ int main() {
             slog("Client connect error");
         }
 
-        printf("[server]: Recive request from %s\n", inet_ntoa(address.sin_addr));
+        setColor(1);
+        printf("\n\n[reqs-accept]: Recive request from %s\n\n", inet_ntoa(address.sin_addr));
+        clearColor();
 
-        printf("\n");
         memset(reqBuffer, 0, sizeof(reqBuffer));
 
         recv(newReq, reqBuffer, sizeof(reqBuffer), 0);
@@ -84,18 +86,20 @@ int main() {
 
         // send(newReq, res, sizeof(res), 0);
 
-        printf("[server]: %s\n", reqBuffer);
+        printf("[req-content]: %s\n", reqBuffer);
 
         // Write Events following
 
         reqBuffer[strlen(reqBuffer)];
 
-        if (strcmp(reqBuffer, "eTest") == 0) {
-            send(newReq, "eTest", 300, 0);
-            closesocket(newReq);
-        }
+        char reqApi[200];
 
-        if (strcmp(reqBuffer, "getProducts") == 0) {
+        parseXML("api", reqBuffer, &reqApi);
+        printf("[request-api]: %s\n", reqApi);
+
+
+        
+        if (strcmp(reqApi, "getProducts") == 0) {
             char products[100];
             getFile("database\\products\\sp1.xml", &products);
             send(newReq, products, sizeof(products), 0);

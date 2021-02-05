@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <windows.h>
 
 char *parseXML(char *tag, char *XMLBuffer, char *tagValue) {
     char openTag[10];
@@ -60,10 +61,81 @@ char *getFile(char *dir, char *value) {
         buffer = malloc(length);
         if (buffer) {
             fread(value, 1, length, f);
-            printf("%s", value);
         }
         fclose(f);
     }
+}
+
+int hash(char *str) {
+    int result = 5381;
+    int c, i;
+    int len = 100;
+    for (result = i = 0; i < len; ++i) {
+        result += str[i];
+        result += (result << 10);
+        result ^= (result >> 6);
+    }
+    return result;
+}
+
+void gotoxy(short x, short y) {
+    HANDLE hConsoleOutput;
+    COORD Cursor_Pos = {x, y};
+
+    hConsoleOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleCursorPosition(hConsoleOutput, Cursor_Pos);
+}
+
+void clrscr(void) {
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    COORD coord = {0, 0};
+    DWORD count;
+    GetConsoleScreenBufferInfo(hStdOut, &csbi);
+    FillConsoleOutputCharacter(hStdOut, ' ', csbi.dwSize.X * csbi.dwSize.Y, coord, &count);
+    SetConsoleCursorPosition(hStdOut, coord);
+}
+
+void HideCursor() {
+    CONSOLE_CURSOR_INFO cursor;
+    cursor.bVisible = FALSE;
+    cursor.dwSize = sizeof(cursor);
+    HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleCursorInfo(handle, &cursor);
+}
+
+void setWindowSize(int col, int lin) {
+    DWORD sWidth = GetSystemMetrics(SM_CXSCREEN);
+    DWORD sHeight = GetSystemMetrics(SM_CYSCREEN);
+
+    HWND hwnd = GetConsoleWindow();
+    RECT rect = {sWidth / 2 - col / 2, sHeight / 2 - lin / 2, col, lin};
+    MoveWindow(hwnd, rect.left, rect.top, rect.right, rect.bottom, TRUE);
+}
+
+void setColor(int colorCode) {
+    /*
+        0 Black
+        1 Blue
+        2 Green
+        3 Cyan
+        4 Red
+        5 Magenta
+        6 Yellow
+        7 White
+        8 Grey
+    */
+
+    int color;
+    HANDLE hConsole;
+    hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleTextAttribute(hConsole, colorCode);
+}
+
+void clearColor() {
+    HANDLE hConsole;
+    hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleTextAttribute(hConsole, 7);
 }
 
 /*
