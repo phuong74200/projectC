@@ -8,7 +8,7 @@
 
 // server's local IPv4 address
 
-#define ADDR "192.168.1.8"
+#define ADDR "192.168.1.10"
 
 void slog(char *content) {
     printf("[client]: %s.\n", content);
