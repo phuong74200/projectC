@@ -8,7 +8,7 @@
 
 // server's local IPv4 address
 
-#define ADDR "192.168.1.10"
+#define ADDR "192.168.0.106"
 
 void slog(char *content) {
     printf("[client]: %s.\n", content);
@@ -61,7 +61,7 @@ int main() {
     while (1) {
         scanf("%s", &message);
         response = fetch(message);
-
+        printf("%s\n", response);
         char itemName[100];
         parseXML("name", response, &itemName);
 
