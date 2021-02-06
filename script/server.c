@@ -47,7 +47,7 @@ int main() {
 
     address.sin_family = AF_INET;
 
-    // don't bind socket to a specfic IP
+    // don't bind socket to any specfic IP
 
     address.sin_port = htons(PORT);
 

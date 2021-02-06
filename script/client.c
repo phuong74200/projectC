@@ -6,7 +6,9 @@
 
 #define PORT 8080
 
-#define ADDR "192.168.1.10"
+// server's local IPv4 address
+
+#define ADDR "192.168.1.8"
 
 void slog(char *content) {
     printf("[client]: %s.\n", content);
