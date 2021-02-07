@@ -112,10 +112,10 @@ void inputDiscount(struct item item[], int index)
 		fflush(stdin);
 		scanf("%u", &item[index].discount);
 		scanf("%c", &validation);
-		if (validation != 10)
+		if (validation != 10 || item[index}.discount < 0 || item[index}.discount >= 100)
 			printf("Nhap loi. Xin nhap lai.\n");
 	}
-	while (validation != 10);
+	while (validation != 10 || item[index}.discount < 0 || || item[index}.discount >= 100);
 	item[index].price = item[index].price - item[index].price * item[index].discount / 100;
 	itoa(item[index].id, idstring, 10);
 	FILE *itemFilePtr;
