@@ -54,7 +54,7 @@ void inputID(struct product product[], int index)
 	{
 		do
 		{
-			printf("Nhap so ID cua mat hang: ");
+			printf("\nNhap so ID cua mat hang: ");
 			fflush(stdin);
 			scanf("%u", &product[index].id);
 			scanf("%c", &validation);
@@ -176,13 +176,13 @@ void deleteProduct(struct product product[], int *indexPtr)
 	char validation, confirmation;
 	if (index == 0)
 	{
-		printf("Khong co hang nao de xoa.\n");
+		printf("\nKhong co hang nao de xoa.\n");
 	}
 	else
 	{
 		do
 		{
-			printf("Hay chon ID cua mon hang can xoa: ");
+			printf("\nHay chon ID cua mon hang can xoa: ");
 			scanf("%d", &id);
 			scanf("%c", &validation);
 			while (validation != 10)
@@ -215,9 +215,12 @@ void deleteProduct(struct product product[], int *indexPtr)
 				}
 			}
 			if (checker != index + 1)
+			{
 				(*indexPtr)--;
+				printf("Hang da xoa thanh cong.\n\n");
+			}
 			else
-				printf("Khong co mat hang nao co ID %d \n", id);
+				printf("Khong co mat hang nao co ID %d \n\n", id);
 			printf("Ban co muon tiep tuc xoa hang khong? (Y/N): ");
 			fflush(stdin);
 			scanf("%c", &confirmation);
@@ -237,6 +240,45 @@ void deleteProduct(struct product product[], int *indexPtr)
 	}
 }
 
+void searchProduct(struct product product[])
+{
+	char productSearch[1000];
+	char confirmation;
+	int checker;
+	int countProduct;
+	do
+	{
+		printf("\nNhap ten san pham can tim: ");
+		fflush(stdin);
+		scanf("%[^\n]", productSearch);
+		countProduct = 0;
+		for (checker = 0; checker <= index; checker++)
+		{
+			if (strstr(product[checker].name, productSearch) != NULL)
+			{
+				printf("\nID: %d\n", product[checker].id);
+				printf("Ten san pham: %s", product[checker].name);
+				printf("Don gia: %d\n", product[checker].price);
+				printf("Muc giam gia: %d\n", product[checker].discount);
+				printf("So luong: %d\n", product[checker].currentQuantity);
+				countProduct++;
+			}
+		}
+		if (countProduct == 0)
+			printf("Khong co san pham \"%s\".\n\n", productSearch);
+		printf("Ban co muon tiep tuc tim hang khong? (Y/N): ");
+		fflush(stdin);
+		scanf("%c", &confirmation);
+		while (confirmation != 'Y' && confirmation != 'y' && confirmation != 'N' && confirmation != 'n')
+		{
+			printf("Nhap loi. Xin nhap lai: ");
+			fflush(stdin);
+			scanf("%c", &confirmation);
+			printf("\n");
+		}
+	}
+	while (confirmation == 'Y' || confirmation == 'y');
+}
 
 int main()
 {
@@ -246,7 +288,9 @@ int main()
 	{
 		printf("\nNhap 1 de them mon hang moi.\n");
 		printf("Nhap 2 de xoa 1 mon hang.\n");
+		printf("Nhap 3 de tim 1 mon hang theo ten.\n");
 		printf("Nhap 8 de dang xuat.\n\n");
+		printf("Hanh dong ban chon: ");
 		scanf("%d", &key);
 		switch (key)
 		{
@@ -260,8 +304,14 @@ int main()
 				deleteProduct(product, &index);
 				break;
 			}
+			case 3:
+			{
+				searchProduct(product);
+				break;
+			}
 			case 8:
 			{
+				printf("Bye bye ~~");
 				break;
 			}
 			default:
