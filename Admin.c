@@ -39,12 +39,12 @@ void inputName(struct product product[], int index)
 	fgets(product[index].name, sizeof(product[index].name), stdin);
 	itoa(product[index].id, idString, 10);
 	FILE *productFilePtr;
-	itemFilePtr = fopen(strcat(strcat(filePath, idString), ".txt"), "a");
+	productFilePtr = fopen(strcat(strcat(filePath, idString), ".txt"), "a");
 	fprintf(productFilePtr, "Ten san pham: %s", product[index].name);
 	fclose(productFilePtr);
 }
 
-void inputID(struct product[], int index)
+void inputID(struct product product[], int index)
 {
 	char validation;
 	int checker;
@@ -58,10 +58,10 @@ void inputID(struct product[], int index)
 			fflush(stdin);
 			scanf("%u", &product[index].id);
 			scanf("%c", &validation);
-			if (validation != 10)
+			if (validation != 10 || product[index].id <= 0)
 				printf("Nhap loi. Xin nhap lai.\n");
 		}
-		while (validation != 10);
+		while (validation != 10 || product[index].id <= 0);
 		for (checker = 0; checker < index; checker++)
 		{
 			if (product[checker].id == product[index].id)
@@ -90,10 +90,10 @@ void inputPrice(struct product product[], int index)
 		fflush(stdin);
 		scanf("%u", &product[index].price);
 		scanf("%c", &validation);
-		if (validation != 10)
+		if (validation != 10 || product[index].price < 0)
 			printf("Nhap loi. Xin nhap lai.\n");
 	}
-	while (validation != 10);
+	while (validation != 10 || product[index].price < 0);
 	itoa(product[index].id, idString, 10);
 	FILE *productFilePtr;
 	productFilePtr = fopen(strcat(strcat(filePath, idString), ".txt"), "a");
@@ -135,10 +135,10 @@ void inputCurrentQuantity(struct product product[], int index)
 		fflush(stdin);
 		scanf("%u", &product[index].currentQuantity);
 		scanf("%c", &validation);
-		if (validation != 10)
+		if (validation != 10 || product[index].currentQuantity <= 0)
 			printf("Nhap loi. Xin nhap lai.\n");
 	}
-	while (validation != 10);
+	while (validation != 10 || product[index].currentQuantity <= 0);
 	itoa(product[index].id, idString, 10);
 	FILE *productFilePtr;
 	productFilePtr = fopen(strcat(strcat(filePath, idString), ".txt"), "a");
@@ -273,4 +273,3 @@ int main()
 	while (key != 8);
 	return 0;
 }
- 
