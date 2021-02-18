@@ -8,7 +8,7 @@
 
 // server's local IPv4 address
 
-#define ADDR "192.168.1.7"
+#define ADDR "192.168.1.10"
 
 void slog(char *content) {
     printf("[client]: %s.\n", content);
@@ -19,6 +19,7 @@ WSADATA wsaData;
 SOCKET initSocket;
 
 int initResult;
+
 char *fetch(char message[200]) {
     initSocket = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -51,59 +52,17 @@ void itemSlide(x, y) {
 }
 
 int main() {
-
+    
     initResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+
     char message[200];
     char *response;
 
     while (1) {
         scanf("%s", &message);
-        createNewXML(&message, "api");
-        fflush(stdin);
-        if (strcmp(message, "<api>inputNewProducts</api>") == 0) {
-            char name[100];
-            char id[100];
-            char quantities[20];
-            char price[30];
-            char discount[20];
-            scanf("%s", &id);
-            strcat(message, "\n");
-            createNewXML(&id, "id");
-            strcat(message, id);
-            fflush(stdin);
-            fgets(name, sizeof(name), stdin);
-            name[strlen(name) - 1] ='\0';
-            strcat(message, "\n");
-            createNewXML(&name, "name");
-            strcat(message, name);
-            fflush(stdin);
-            scanf("%s", &quantities);
-            strcat(message, "\n");
-            createNewXML(&quantities, "quantities");
-            strcat(message, quantities);
-            fflush(stdin);
-            scanf("%s", &price);
-            strcat(message, "\n");
-            createNewXML(&price, "price");
-            strcat(message, price);
-            fflush(stdin);
-            scanf("%s", &discount);
-            strcat(message, "\n");
-            createNewXML(&discount, "discount");
-            strcat(message, discount);
-            fflush(stdin);
-
-        }
-        if (strcmp(message, "<api>deleteProducts</api>") == 0 || strcmp(message, "<api>getProducts</api>") == 0) {
-            char id[100] = "";
-            scanf("%s", &id);
-            createNewXML(&id, "id");
-            strcat(message, "\n");
-            strcat(message, id);
-        }
         response = fetch(message);
-       // printf("%s\n", response);
-        char itemName[100] = "";
+        printf("%s\n", response);
+        char itemName[100];
         parseXML("name", response, &itemName);
 
         printf("%s\n", itemName);
