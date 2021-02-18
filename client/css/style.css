@@ -1,0 +1,13 @@
+* {
+    text-shadow: none;
+}
+
+.btn {
+    border: 0px;
+    background: green;
+}
+
+.btn:hover {
+    background-color: red;
+    transition: all 1s;
+}
