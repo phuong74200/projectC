@@ -92,47 +92,19 @@ int main() {
 
         reqBuffer[strlen(reqBuffer)];
 
-        char reqApi[200]="";
+        char reqApi[200];
 
         parseXML("api", reqBuffer, &reqApi);
         printf("[request-api]: %s\n", reqApi);
+
         if (strcmp(reqApi, "getProducts") == 0) {
             printf("accepted\n");
-            char products[100]="";
-            char id[100] = "";
-
-            parseXML("id", reqBuffer, &id);
-            strcat(id, ".xml");
-            char filePath[100] = "database\\products\\";
-            strcat(filePath, id);
-            readFile(filePath, &products);
-            //printf("%s", reqBuffer);
+            char products[100];
+            readFile("database\\products\\sp1.xml", &products);
             send(newReq, products, sizeof(products), 0);
             closesocket(newReq);
         }
 
-        if (strcmp(reqApi, "inputNewProducts") == 0) {
-            printf("accepted\n");
-            char id[100] = "";
-
-            parseXML("id", reqBuffer, &id);
-            strcat(id, ".xml");
-            char filePath[100] = "database\\products\\";
-            strcat(filePath, id);
-            writeFile(filePath, reqBuffer + 28);
-            closesocket(newReq);
-
-        }
-        if (strcmp(reqApi, "deleteProducts") == 0) {
-            printf("accepted\n");
-            char id[100] = "";
-            parseXML("id", reqBuffer, &id);
-            strcat(id, ".xml");
-            char filePath[100] = "database\\products\\";
-            strcat(filePath, id);
-            remove(filePath);
-            closesocket(newReq);
-        }
         send(newReq, "event not available...", 300, 0);
         closesocket(newReq);
     }
