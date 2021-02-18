@@ -69,7 +69,36 @@ char *readFile(char *dir, char *value) {
         fclose(f);
     }
 }
+void writeFile(char *dir, char *value) {
+    FILE *f = fopen(dir, "w");
+    fprintf(f, "%s", value);
+    fclose(f);
+}
+void createNewXML(char *str, char tag[]) {
+    char openTag[100];
+    char closeTag[100];
 
+    memset(openTag, 0, sizeof(openTag));
+    strcpy(openTag, "<");
+    strcat(openTag, tag);
+    strcat(openTag, ">");
+
+    memset(closeTag, 0, sizeof(closeTag));
+    strcpy(closeTag, "</");
+    strcat(closeTag, tag);
+    strcat(closeTag, ">");
+    int length =strlen(str);
+    int lengthOpenTag = strlen(openTag);
+    for (int i = length - 1; i >= 0; i--) {
+        *(str + i + lengthOpenTag) = *(str + i);
+    }
+    *(str + length + lengthOpenTag) = '\0';
+    for (int i = 0; i < lengthOpenTag; i ++) {
+        *(str + i) = openTag[i];
+    }
+    strcat(str, closeTag);
+    *(str + length + lengthOpenTag * 2 +1) = '\0';
+}
 int hash(char *str) {
     int result = 5381;
     int c, i;
