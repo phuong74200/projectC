@@ -2,12 +2,45 @@
     text-shadow: none;
 }
 
-.btn {
-    border: 0px;
-    background: green;
+.login-grid {
+    background: white;
+    padding: 16px;
 }
 
-.btn:hover {
-    background-color: red;
-    transition: all 1s;
+.login-image {
+    margin: 32px;
+}
+
+.input-box {
+    border: 1px solid #0074D9;
+    border-radius: 0px;
+    outline: none;
+}
+
+.login-btn {
+    font-weight: bold;
+    color: white;
+    border: 0px;
+    border-radius: 0px;
+    background: #0074D9;
+    font-size: 16px;
+    letter-spacing: 4px;
+    transition: all .2s;
+}
+
+.login-btn:hover {
+    color: #272727;
+}
+
+.register-btn {
+    background: white;
+    border: 1px solid white;
+    border-radius: 0px;
+    transition: all .2s;
+    outline: none;
+}
+
+.register-btn:hover {
+    color: #0074D9;
+    border: 1px solid #f2f2f2;
 }

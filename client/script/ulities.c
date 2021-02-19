@@ -45,7 +45,7 @@ int *parseXML(char *tag, char *XMLBuffer, char *tagValue) {
 
     memset(tagValue, 0, sizeof(tagValue));
 
-    int startPoint = XMLBuffer + openTagPos + strlen(openTag);
+    int *startPoint = XMLBuffer + openTagPos + strlen(openTag);
     int endPoint = closeTagPos - openTagPos - strlen(closeTag) + 1;
 
     memcpy(tagValue, startPoint, endPoint);
