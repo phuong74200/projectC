@@ -31,7 +31,7 @@
                 </child>
 
                 <child>
-                    <object id="button1" class="GtkEntry">
+                    <object id="usernameEntry" class="GtkEntry">
                         <style>
                             <class name='input-box'></class>
                         </style>
@@ -47,7 +47,7 @@
                 </child>
 
                 <child>
-                    <object id="button2" class="GtkEntry">
+                    <object id="passwordEntry" class="GtkEntry">
                         <style>
                             <class name='input-box'></class>
                         </style>
@@ -64,7 +64,7 @@
                 </child>
 
                 <child>
-                    <object id="quit" class="GtkButton">
+                    <object id="loginBtn" class="GtkButton">
                         <style>
                             <class name="login-btn"></class>
                         </style>

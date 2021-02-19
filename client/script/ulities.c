@@ -4,8 +4,8 @@
 #include <windows.h>
 
 int *parseXML(char *tag, char *XMLBuffer, char *tagValue) {
-    char openTag[10];
-    char closeTag[10];
+    char openTag[100];
+    char closeTag[100];
 
     memset(openTag, 0, sizeof(openTag));
     strcpy(openTag, "<");

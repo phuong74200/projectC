@@ -49,9 +49,38 @@ char *fetch(char message[200]) {
     return response;
 }
 
-static void
-print_hello(GtkWidget *widget, gpointer data) {
+GtkBuilder *builder;
+GObject *window;
+GObject *button;
+GError *error = NULL;
+
+static void print_hello(GtkWidget *widget, gpointer data) {
     char *response = fetch("<api>fuong</api>");
+    printf("%s\n", response);
+}
+
+void loginEvent(GtkWidget *widget, gpointer data) {
+    GObject *usernameEntry;
+    GObject *passwordEntry;
+    usernameEntry = gtk_builder_get_object(builder, "usernameEntry");
+    passwordEntry = gtk_builder_get_object(builder, "passwordEntry");
+    
+    char *password = gtk_entry_get_text(passwordEntry);
+    char *username = gtk_entry_get_text(usernameEntry);
+
+    printf("%s\n", password);
+    printf("%s\n", username);
+
+    char request[1000] = "<api>login</api><username>";
+
+    strcat(request, username);
+    strcat(request, "</username><password>");
+    strcat(request, password);
+    strcat(request, "</password>");
+
+    char *response;
+    response = fetch(request);
+
     printf("%s\n", response);
 }
 
@@ -61,11 +90,6 @@ int main(int argc, char *argv[]) {
     initResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
 
     // XML loader
-
-    GtkBuilder *builder;
-    GObject *window;
-    GObject *button;
-    GError *error = NULL;
 
     gtk_init(&argc, &argv);
 
@@ -97,14 +121,14 @@ int main(int argc, char *argv[]) {
     window = gtk_builder_get_object(builder, "window");
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
 
-    // button = gtk_builder_get_object(builder, "button1");
-    // g_signal_connect(button, "clicked", G_CALLBACK(print_hello), NULL);
+    button = gtk_builder_get_object(builder, "loginBtn");
+    g_signal_connect(button, "clicked", G_CALLBACK(loginEvent), NULL);
 
     // button = gtk_builder_get_object(builder, "button2");
     // g_signal_connect(button, "clicked", G_CALLBACK(print_hello), NULL);
 
-    button = gtk_builder_get_object(builder, "quit");
-    g_signal_connect(button, "clicked", G_CALLBACK(gtk_main_quit), NULL);
+    // button = gtk_builder_get_object(builder, "quit");
+    // g_signal_connect(button, "clicked", G_CALLBACK(gtk_main_quit), NULL);
 
     gtk_main();
 

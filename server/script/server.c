@@ -92,13 +92,16 @@ int main() {
 
         reqBuffer[strlen(reqBuffer)];
 
-        char reqApi[200]="";
+        char reqApi[200] = "";
 
         parseXML("api", reqBuffer, &reqApi);
         printf("[request-api]: %s\n", reqApi);
+
+        // ------ Phuong ------
+
         if (strcmp(reqApi, "getProducts") == 0) {
             printf("accepted\n");
-            char products[100]="";
+            char products[100] = "";
             char id[100] = "";
 
             parseXML("id", reqBuffer, &id);
@@ -111,6 +114,51 @@ int main() {
             closesocket(newReq);
         }
 
+        if (strcmp(reqApi, "login") == 0) {
+            printf("accepted\n");
+
+            char accountData[1000] = "";
+            char username[99] = "";
+            char password[99] = "";
+
+            parseXML("username", reqBuffer, &username);
+            parseXML("password", reqBuffer, &password);
+
+            char filePath[100] = "database\\accounts\\";
+            strcat(filePath, username);
+            strcat(filePath, ".xml");
+            readFile(filePath, &accountData);
+
+            printf("reqBuffer: %s\n", reqBuffer);
+            printf("database: %s\n", accountData);
+            printf("filepath: %s\n", filePath);
+            printf("username: %s\n", username);
+            printf("password: %s\n", password);
+
+            char truePassword[40] = "";
+            parseXML("password", accountData, &truePassword);
+            char trueUsername[40] = "";
+            parseXML("username", accountData, &trueUsername);
+
+            printf("true_username: %s\n", trueUsername);
+            printf("true_password: %s\n", truePassword);
+
+            char status[40] = "login_fail";
+
+            printf("%d\n", strcmp(password, truePassword));
+            printf("%d\n", strcmp(username, trueUsername));
+
+            if (strcmp(password, truePassword) == 0 && strcmp(username, trueUsername) == 0) {
+                memset(status, 0, sizeof(status));
+                strcpy(status, "login_success");
+            }
+
+            send(newReq, status, sizeof(status), 0);
+            closesocket(newReq);
+        }
+
+        // ------ Phuong ------
+
         if (strcmp(reqApi, "inputNewProducts") == 0) {
             printf("accepted\n");
             char id[100] = "";
@@ -121,7 +169,6 @@ int main() {
             strcat(filePath, id);
             writeFile(filePath, reqBuffer + 28);
             closesocket(newReq);
-
         }
         if (strcmp(reqApi, "deleteProducts") == 0) {
             printf("accepted\n");
@@ -133,6 +180,7 @@ int main() {
             remove(filePath);
             closesocket(newReq);
         }
+
         send(newReq, "event not available...", 300, 0);
         closesocket(newReq);
     }
