@@ -49,10 +49,11 @@ char *fetch(char message[200]) {
     return response;
 }
 
-GtkBuilder *builder;
 GObject *window;
 GObject *button;
 GError *error = NULL;
+
+GtkBuilder *builder;
 
 static void print_hello(GtkWidget *widget, gpointer data) {
     char *response = fetch("<api>fuong</api>");
@@ -64,7 +65,7 @@ void loginEvent(GtkWidget *widget, gpointer data) {
     GObject *passwordEntry;
     usernameEntry = gtk_builder_get_object(builder, "usernameEntry");
     passwordEntry = gtk_builder_get_object(builder, "passwordEntry");
-    
+
     char *password = gtk_entry_get_text(passwordEntry);
     char *username = gtk_entry_get_text(usernameEntry);
 
@@ -84,21 +85,13 @@ void loginEvent(GtkWidget *widget, gpointer data) {
     printf("%s\n", response);
 }
 
-int main(int argc, char *argv[]) {
-    // init socket
+int guestLogin() {
+    landingPageDisplay();
+}
 
-    initResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
-
-    // XML loader
-
-    gtk_init(&argc, &argv);
-
+void loginScreenDisplay() {
     builder = gtk_builder_new();
     gtk_builder_add_from_file(builder, "UI\\builder.xml", &error);
-
-    // gtk_widget_set_size_request(window, 300, 500);
-
-    // CSS loader
 
     GtkCssProvider *provider;
     GdkDisplay *display;
@@ -116,19 +109,34 @@ int main(int argc, char *argv[]) {
 
     gtk_css_provider_load_from_file(provider, css_file, &error1);
 
-    // Code goes following
-
-    window = gtk_builder_get_object(builder, "window");
+    window = gtk_builder_get_object(builder, "mainWindow");
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
+
+    window = gtk_builder_get_object(builder, "guestLoginBtn");
+    g_signal_connect(window, "clicked", G_CALLBACK(guestLogin), NULL);
 
     button = gtk_builder_get_object(builder, "loginBtn");
     g_signal_connect(button, "clicked", G_CALLBACK(loginEvent), NULL);
+}
 
-    // button = gtk_builder_get_object(builder, "button2");
-    // g_signal_connect(button, "clicked", G_CALLBACK(print_hello), NULL);
+void landingPageDisplay() {
+    window = gtk_builder_get_object(builder, "loginPage");
+    gtk_widget_destroy(window);
+    window = gtk_builder_get_object(builder, "landingPage");
+    GObject *container;
+    container = gtk_builder_get_object(builder, "mainWindow");
+    gtk_container_add(container, window);
 
-    // button = gtk_builder_get_object(builder, "quit");
-    // g_signal_connect(button, "clicked", G_CALLBACK(gtk_main_quit), NULL);
+    gtk_window_set_position(GTK_WINDOW(container), GTK_WIN_POS_CENTER_ALWAYS);
+}
+
+int main(int argc, char *argv[]) {
+    // init socket
+    initResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+
+    gtk_init(&argc, &argv);
+
+    loginScreenDisplay();
 
     gtk_main();
 
