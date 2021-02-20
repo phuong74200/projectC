@@ -119,15 +119,43 @@ void loginScreenDisplay() {
     g_signal_connect(button, "clicked", G_CALLBACK(loginEvent), NULL);
 }
 
+GObject *container;
+
 void landingPageDisplay() {
     window = gtk_builder_get_object(builder, "loginPage");
     gtk_widget_destroy(window);
     window = gtk_builder_get_object(builder, "landingPage");
-    GObject *container;
-    container = gtk_builder_get_object(builder, "mainWindow");
+
     gtk_container_add(container, window);
 
     gtk_window_set_position(GTK_WINDOW(container), GTK_WIN_POS_CENTER_ALWAYS);
+    gtk_window_set_title(GTK_WINDOW(container), "Shoply (Guest)");
+
+    gtk_window_set_icon_from_file(GTK_WINDOW(container), "assets\\icon.png", NULL);
+
+    for (int left = 0; left < 5; left++) {
+        for (int top = 0; top < 5; top++) {
+            addProducts(left, top);
+        }
+    }
+}
+
+void addProducts(int left, int top) {
+    GObject *productContainer;
+    GObject *productForm;
+
+    GObject *grid = gtk_builder_get_object(builder, "productsGrid");
+
+    productContainer = gtk_builder_new_from_file("UI\\product.xml");
+
+    productForm = gtk_builder_get_object(productContainer, "productForm");
+
+    gtk_grid_attach(grid, productForm, left, top, 1, 1);
+
+    gtk_widget_show_all(grid);
+
+    printf(grid);
+    printf(productForm);
 }
 
 int main(int argc, char *argv[]) {
@@ -137,6 +165,7 @@ int main(int argc, char *argv[]) {
     gtk_init(&argc, &argv);
 
     loginScreenDisplay();
+    container = gtk_builder_get_object(builder, "mainWindow");
 
     gtk_main();
 
