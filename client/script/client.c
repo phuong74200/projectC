@@ -65,7 +65,7 @@ static void print_hello(GtkWidget *widget, gpointer data) {
     printf("%s\n", response);
 }
 
-void xmlp(char tagName[100], char xmlstr[1000], char *ret) {
+const char *xmlp(char tagName[100], char xmlstr[1000]) {
     char openTag[100] = "";
     char closeTag[100] = "";
 
@@ -104,6 +104,8 @@ void xmlp(char tagName[100], char xmlstr[1000], char *ret) {
         }
     }
 
+    char *ret = g_malloc(200);
+
     memset(ret, 0, sizeof(ret));
 
     int spoint = oppos + strlen(openTag);
@@ -120,10 +122,16 @@ void xmlp(char tagName[100], char xmlstr[1000], char *ret) {
         pos++;
     }
 
+    ret[pos + 1] = '\0';
+
     printf("%s\n", ret);
     printf("%s\n", xmlstr);
 
-    return 0;
+    return ret;
+}
+
+const char *myName() {
+    return "Flavio";
 }
 
 void loginThread(gpointer data) {
@@ -147,9 +155,10 @@ void loginThread(gpointer data) {
 
     closesocket(initSocket);
 
-    char f[200] = "";
+    char *avail = "";
+    avail = xmlp("token", XMLBuffer);
 
-    xmlp("avail", XMLBuffer, &f);
+    printf("%s\n", avail);
 }
 
 void loginEvent(GtkWidget *widget, gpointer data) {
