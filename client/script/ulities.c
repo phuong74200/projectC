@@ -1,9 +1,44 @@
+#include <gtk/gtk.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+#include <unistd.h>
 #include <windows.h>
 
-int *parseXML(char *tag, char *XMLBuffer, char *tagValue) {
+char *randstring(int length) {
+    char *string = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    size_t stringLen = 26 * 2 + 10 + 7;
+    char *randomString;
+
+    randomString = malloc(sizeof(char) * (length + 1));
+
+    if (!randomString) {
+        return (char *)0;
+    }
+
+    unsigned int key = 0;
+
+    for (int n = 0; n < length; n++) {
+        key = rand() % stringLen;
+        randomString[n] = string[key];
+    }
+
+    randomString[length] = '\0';
+
+    return randomString;
+}
+
+int checkFile(char *dir) {
+    if (access(dir, F_OK) == 0) {
+        return 1;
+    } else {
+        return 0;
+    }
+    return 0;
+}
+
+void *parseXML(char tag[200], char XMLBuffer[200], char *tagValue) {
     char openTag[100];
     char closeTag[100];
 
@@ -39,18 +74,16 @@ int *parseXML(char *tag, char *XMLBuffer, char *tagValue) {
         }
     }
 
-    if(openTagPos == -1 || closeTagPos == -1) {
+    if (openTagPos == -1 || closeTagPos == -1) {
         return 0;
     }
 
     memset(tagValue, 0, sizeof(tagValue));
 
-    int *startPoint = XMLBuffer + openTagPos + strlen(openTag);
+    int startPoint = XMLBuffer + openTagPos + strlen(openTag);
     int endPoint = closeTagPos - openTagPos - strlen(closeTag) + 1;
 
     memcpy(tagValue, startPoint, endPoint);
-
-    return 0;
 }
 
 char *readFile(char *dir, char *value) {
@@ -69,11 +102,13 @@ char *readFile(char *dir, char *value) {
         fclose(f);
     }
 }
+
 void writeFile(char *dir, char *value) {
     FILE *f = fopen(dir, "w");
     fprintf(f, "%s", value);
     fclose(f);
 }
+
 void createNewXML(char *str, char tag[]) {
     char openTag[100];
     char closeTag[100];
@@ -87,17 +122,17 @@ void createNewXML(char *str, char tag[]) {
     strcpy(closeTag, "</");
     strcat(closeTag, tag);
     strcat(closeTag, ">");
-    int length =strlen(str);
+    int length = strlen(str);
     int lengthOpenTag = strlen(openTag);
     for (int i = length - 1; i >= 0; i--) {
         *(str + i + lengthOpenTag) = *(str + i);
     }
     *(str + length + lengthOpenTag) = '\0';
-    for (int i = 0; i < lengthOpenTag; i ++) {
+    for (int i = 0; i < lengthOpenTag; i++) {
         *(str + i) = openTag[i];
     }
     strcat(str, closeTag);
-    *(str + length + lengthOpenTag * 2 +1) = '\0';
+    *(str + length + lengthOpenTag * 2 + 1) = '\0';
 }
 int hash(char *str) {
     int result = 5381;

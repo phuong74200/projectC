@@ -40,9 +40,9 @@ char *fetch(char message[200]) {
 
     send(initSocket, message, strlen(message), 0);
 
-    static char response[40000];
+    static char response[200];
 
-    recv(initSocket, &response, 40000, 0);
+    recv(initSocket, &response, 200, 0);
 
     closesocket(initSocket);
 
@@ -63,93 +63,6 @@ GtkBuilder *builder;
 static void print_hello(GtkWidget *widget, gpointer data) {
     char *response = fetch("<api>fuong</api>");
     printf("%s\n", response);
-}
-
-void xmlp(char tagName[100], char xmlstr[1000], char *ret) {
-    char openTag[100] = "";
-    char closeTag[100] = "";
-
-    g_strlcpy(openTag, "<", 100);
-    g_strlcat(openTag, tagName, 100);
-    g_strlcat(openTag, ">", 100);
-
-    g_strlcpy(closeTag, "</", 100);
-    g_strlcat(closeTag, tagName, 100);
-    g_strlcat(closeTag, ">", 100);
-
-    printf("%s\n", openTag);
-    printf("%s\n", closeTag);
-
-    int xmllen = strlen(xmlstr);
-
-    int oplen = strlen(openTag);
-    int cllen = strlen(closeTag);
-
-    int oppos = -1;
-    int clpos = -1;
-
-    for (int i = 0; i < xmllen; i++) {
-        int cmp = memcmp(openTag, xmlstr + i, strlen(openTag));
-        if (cmp == 0) {
-            oppos = i;
-            break;
-        }
-    }
-
-    for (int i = 0; i < xmllen; i++) {
-        int cmp = memcmp(closeTag, xmlstr + i, strlen(closeTag));
-        if (cmp == 0) {
-            clpos = i;
-            break;
-        }
-    }
-
-    memset(ret, 0, sizeof(ret));
-
-    int spoint = oppos + strlen(openTag);
-    int epoint = clpos + strlen(closeTag) - cllen;
-
-    printf("%d\n", spoint);
-    printf("%d\n", epoint);
-
-    memset(ret, 0, sizeof(ret));
-
-    int pos = 0;
-    for (int i = spoint; i < epoint; i++) {
-        ret[pos] = xmlstr[i];
-        pos++;
-    }
-
-    printf("%s\n", ret);
-    printf("%s\n", xmlstr);
-
-    return 0;
-}
-
-void loginThread(gpointer data) {
-    initSocket = socket(AF_INET, SOCK_STREAM, 0);
-
-    struct sockaddr_in address;
-
-    address.sin_family = AF_INET;
-    address.sin_port = htons(PORT);
-    address.sin_addr.s_addr = inet_addr(ADDR);
-
-    if (connect(initSocket, (struct sockaddr *)&address, sizeof(address)) < 0) {
-        return "connect_failed";
-    }
-
-    send(initSocket, data, strlen(data), 0);
-
-    static char XMLBuffer[200];
-
-    recv(initSocket, &XMLBuffer, 200, 0);
-
-    closesocket(initSocket);
-
-    char f[200] = "";
-
-    xmlp("avail", XMLBuffer, &f);
 }
 
 void loginEvent(GtkWidget *widget, gpointer data) {
@@ -173,7 +86,26 @@ void loginEvent(GtkWidget *widget, gpointer data) {
 
     char *response;
 
-    g_thread_new("avail", loginThread, request);
+    response = fetch(request);
+    printf("%s\n", response);
+
+    GtkWidget *socket = gtk_socket_new();
+
+    char *token = strtok(response, ";");
+
+    char uToken[100] = "";
+    char status[100] = "";
+
+    strcpy(uToken, token);
+    token = strtok(NULL, " ");
+    strcpy(status, token);
+
+    printf("%s\n", uToken);
+    printf("%s\n", status);
+
+    if (strcmp(status, "login_success") == 0) {
+        writeFile("cache\\token.dat", token);
+    }
 }
 
 void clearAllForms() {
