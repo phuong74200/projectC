@@ -243,13 +243,6 @@ void setForm(char *path, char *id) {
     gtk_container_add(GTK_CONTAINER(mainWindow), form);
 }
 
-void admin_users_manage() {
-    GtkBuilder *admin_users_manage_window = gtk_builder_new();
-    admin_users_manage_window = gtk_builder_new_from_file("UI\\user_manage.xml");
-    printf("open user manager\n");
-    gtk_windiw_show_all();
-}
-
 void landingScreenDisplay() {
     setForm("UI\\landing.xml", "landingPage");
     gtk_window_set_title(GTK_WINDOW(mainWindow), "Shoply");
@@ -278,8 +271,6 @@ void landingScreenDisplay() {
             if (strcmp(response, "admin") == 0) {
                 button = gtk_builder_get_object(builder, "ad_users");
                 gtk_widget_show(button);
-                g_signal_connect(button, "clicked", G_CALLBACK(admin_users_manage), NULL);
-
                 button = gtk_builder_get_object(builder, "ad_products");
                 gtk_widget_show(button);
             }

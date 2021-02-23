@@ -247,7 +247,7 @@ void admin_users_manage() {
     GtkBuilder *admin_users_manage_window = gtk_builder_new();
     admin_users_manage_window = gtk_builder_new_from_file("UI\\user_manage.xml");
     printf("open user manager\n");
-    gtk_windiw_show_all();
+    gtk_widget_show_all(admin_users_manage_window);
 }
 
 void landingScreenDisplay() {

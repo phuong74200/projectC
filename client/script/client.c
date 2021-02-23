@@ -1,4 +1,5 @@
 #include <conio.h>
+#include <dirent.h>
 #include <gtk/gtk.h>
 #include <stdio.h>
 #include <winsock2.h>
@@ -243,6 +244,40 @@ void setForm(char *path, char *id) {
     gtk_container_add(GTK_CONTAINER(mainWindow), form);
 }
 
+void adm_getUserThread(gpointer data) {
+    initSocket = socket(AF_INET, SOCK_STREAM, 0);
+
+    struct sockaddr_in address;
+
+    address.sin_family = AF_INET;
+    address.sin_port = htons(PORT);
+    address.sin_addr.s_addr = inet_addr(ADDR);
+
+    if (connect(initSocket, (struct sockaddr *)&address, sizeof(address)) < 0) {
+        return "connect_failed";
+    }
+
+    send(initSocket, data, strlen(data), 0);
+
+    gchar XMLBuffer[200];
+
+    recv(initSocket, &XMLBuffer, 200, 0);
+
+    closesocket(initSocket);
+
+    printf("%s", XMLBuffer);
+}
+
+void admin_users_manage() {
+    GtkBuilder *admin_users_manage_window = gtk_builder_new();
+    admin_users_manage_window = gtk_builder_new_from_file("UI\\user_manage.xml");
+    GObject *adminWindow = gtk_builder_get_object(admin_users_manage_window, "mainWindow");
+    gtk_widget_show_all(adminWindow);
+    gchar request[2000] = "<api>getUserList</api>";
+    g_thread_new("avail", adm_getUserThread, request);
+    printf("open user manager\n");
+}
+
 void landingScreenDisplay() {
     setForm("UI\\landing.xml", "landingPage");
     gtk_window_set_title(GTK_WINDOW(mainWindow), "Shoply");
@@ -268,6 +303,14 @@ void landingScreenDisplay() {
             printf("token rejected\n");
         } else {
             gtk_button_set_label(button, "log out");
+            if (strcmp(response, "admin") == 0) {
+                button = gtk_builder_get_object(builder, "ad_users");
+                gtk_widget_show(button);
+                g_signal_connect(button, "clicked", G_CALLBACK(admin_users_manage), NULL);
+
+                button = gtk_builder_get_object(builder, "ad_products");
+                gtk_widget_show(button);
+            }
             printf("token accepted\n");
         }
     }
@@ -360,7 +403,7 @@ void registerEvent() {
         printf("%s\n", response);
     } else if (strlen(username) < 6 || strlen(password) < 6) {
         log = gtk_builder_get_object(builder, "registerLog");
-        gtk_label_set_text(log, "Username or password length smaller than 5");
+        gtk_label_set_text(log, "Username or password length smaller than 6");
         gtk_widget_set_visible(log, TRUE);
         log = gtk_builder_get_object(builder, "registerLog1");
         gtk_widget_set_visible(log, FALSE);

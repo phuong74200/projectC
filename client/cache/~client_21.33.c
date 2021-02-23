@@ -1,4 +1,5 @@
 #include <conio.h>
+#include <dirent.h>
 #include <gtk/gtk.h>
 #include <stdio.h>
 #include <winsock2.h>
@@ -163,9 +164,11 @@ void loginThread(gpointer data) {
         printf("login sucess\n");
         writeFile("appcache\\token.ctf", token);
         landingScreenDisplay();
+    } else {
+        button = gtk_builder_get_object(builder, "loginLog");
+        gtk_label_set_text(button, "Wrong username or password");
+        gtk_widget_set_visible(button, TRUE);
     }
-
-    g_thread_exit(0);
 }
 
 void loginEvent(GtkWidget *widget, gpointer data) {
@@ -180,14 +183,48 @@ void loginEvent(GtkWidget *widget, gpointer data) {
     printf("%s\n", password);
     printf("%s\n", username);
 
-    gchar request[1000] = "<api>login</api><username>";
+    gchar request[1000] = "";
+    memset(request, 0, strlen(request));
 
+    strcpy(request, "<api>login</api><username>");
     strcat(request, username);
     strcat(request, "</username><password>");
     strcat(request, password);
     strcat(request, "</password>");
 
-    g_thread_new("avail", loginThread, request);
+    int validUsername = 0;
+    int validPassword = 0;
+
+    for (int i = 0; i < strlen(username) - 1; i++) {
+        int isAl = g_ascii_isalpha(username[i]);
+        int isDg = g_ascii_isdigit(username[i]);
+        if ((isAl == 0 && isDg == 0) || strlen(username) < 6) {
+            validUsername = 0;
+            break;
+        } else {
+            validUsername = 1;
+        }
+    }
+
+    for (int i = 0; i < strlen(password) - 1; i++) {
+        int isAl = g_ascii_isalpha(password[i]);
+        int isDg = g_ascii_isdigit(password[i]);
+        if ((isAl == 0 && isDg == 0) || strlen(password) < 6) {
+            validPassword = 0;
+            break;
+        } else {
+            validPassword = 1;
+        }
+    }
+
+    if (validPassword == 1 && validUsername == 1) {
+        g_thread_new("avail", loginThread, request);
+    } else {
+        printf("not valid\n");
+        button = gtk_builder_get_object(builder, "loginLog");
+        gtk_label_set_text(button, "Wrong username or password");
+        gtk_widget_set_visible(button, TRUE);
+    }
 }
 
 void clearAllForms() {
@@ -207,9 +244,26 @@ void setForm(char *path, char *id) {
     gtk_container_add(GTK_CONTAINER(mainWindow), form);
 }
 
+void admin_users_manage() {
+    GtkBuilder *admin_users_manage_window = gtk_builder_new();
+    admin_users_manage_window = gtk_builder_new_from_file("UI\\user_manage.xml");
+    GObject *adminWindow = gtk_builder_get_object(admin_users_manage_window, "mainWindow");
+    gtk_widget_show_all(adminWindow);
+    printf("open user manager\n");
+    DIR *d;
+    struct dirent *dir;
+    d = opendir("cache");
+    if (d) {
+        while ((dir = readdir(d)) != NULL) {
+            printf("%s\n", dir.d_name);
+        }
+        closedir(d);
+    }
+}
+
 void landingScreenDisplay() {
     setForm("UI\\landing.xml", "landingPage");
-    gtk_window_set_title(GTK_WINDOW(mainWindow), "Shoply (Guest)");
+    gtk_window_set_title(GTK_WINDOW(mainWindow), "Shoply");
     gtk_window_set_position(GTK_WINDOW(mainWindow), GTK_WIN_POS_CENTER_ALWAYS);
 
     button = gtk_builder_get_object(builder, "landingLoginBtn");
@@ -223,27 +277,24 @@ void landingScreenDisplay() {
         strcat(request, "</token>");
 
         char response[200] = "\0";
-        printf("result of token checking: %s\n", response);
         strcpy(response, fetch(request));
 
         printf("result of token checking: %s\n", response);
 
-        char title[100] = "";
-        printf("%s\n", title);
-        memset(title, 0, strlen(title));
-        printf("%s\n", title);
-        strcpy(title, "Shoply (");
-        printf("%s\n", title);
-        strcat(title, response);
-        printf("%s\n", title);
-        strcat(title, ")");
-        printf("%s\n", title);
-
-        if (g_strcmp0(response, "not_exist" == 0)) {
-            gtk_window_set_title(GTK_WINDOW(mainWindow), "Shoply (Guest)");
+        if (strcmp(response, "not_exist") == 0) {
+            gtk_button_set_label(button, "log in");
+            printf("token rejected\n");
         } else {
-            gtk_window_set_title(GTK_WINDOW(mainWindow), title);
             gtk_button_set_label(button, "log out");
+            if (strcmp(response, "admin") == 0) {
+                button = gtk_builder_get_object(builder, "ad_users");
+                gtk_widget_show(button);
+                g_signal_connect(button, "clicked", G_CALLBACK(admin_users_manage), NULL);
+
+                button = gtk_builder_get_object(builder, "ad_products");
+                gtk_widget_show(button);
+            }
+            printf("token accepted\n");
         }
     }
 }
@@ -267,7 +318,35 @@ void registerEvent() {
 
     GtkStyleContext *context;
 
-    if (strcmp(password, repassword) == 0 && gtk_entry_get_text_length(repasswordEntry) > 0 && gtk_entry_get_text_length(rerepasswordEntry) > 0) {
+    int validUsername = 0;
+    int validPassword = 0;
+
+    printf("len: %d\n", strlen(password));
+    printf("len: %d\n", strlen(username));
+
+    for (int i = 0; i < strlen(password) - 1; i++) {
+        int isAl = g_ascii_isalpha(password[i]);
+        int isDg = g_ascii_isdigit(password[i]);
+        if ((isAl == 0 && isDg == 0) || strlen(password) < 6) {
+            validPassword = 0;
+            break;
+        } else {
+            validUsername = 1;
+        }
+    }
+
+    for (int i = 0; i < strlen(username) - 1; i++) {
+        int isAl = g_ascii_isalpha(username[i]);
+        int isDg = g_ascii_isdigit(username[i]);
+        if ((isAl == 0 && isDg == 0) || strlen(username) < 6) {
+            validUsername = 0;
+            break;
+        } else {
+            validPassword = 1;
+        }
+    }
+
+    if (strcmp(password, repassword) == 0 && gtk_entry_get_text_length(repasswordEntry) > 0 && gtk_entry_get_text_length(rerepasswordEntry) > 0 && validUsername == 1 && validPassword == 1) {
         char request[1000] = "<api>register</api><username>";
 
         strcat(request, username);
@@ -305,11 +384,26 @@ void registerEvent() {
         }
 
         printf("%s\n", response);
+    } else if (strlen(username) < 6 || strlen(password) < 6) {
+        log = gtk_builder_get_object(builder, "registerLog");
+        gtk_label_set_text(log, "Username or password length smaller than 6");
+        gtk_widget_set_visible(log, TRUE);
+        log = gtk_builder_get_object(builder, "registerLog1");
+        gtk_widget_set_visible(log, FALSE);
+        log = gtk_builder_get_object(builder, "registerLog2");
+        gtk_widget_set_visible(log, FALSE);
+    } else if (validPassword == 0 || validUsername == 0) {
+        log = gtk_builder_get_object(builder, "registerLog");
+        gtk_label_set_text(log, "Username or password is not valid");
+        gtk_widget_set_visible(log, TRUE);
+        log = gtk_builder_get_object(builder, "registerLog1");
+        gtk_widget_set_visible(log, FALSE);
+        log = gtk_builder_get_object(builder, "registerLog2");
+        gtk_widget_set_visible(log, FALSE);
     } else {
         log = gtk_builder_get_object(builder, "registerLog1");
         gtk_label_set_text(log, "Password not match");
         gtk_widget_set_visible(log, TRUE);
-
         log = gtk_builder_get_object(builder, "registerLog2");
         gtk_label_set_text(log, "Password not match");
         gtk_widget_set_visible(log, TRUE);
@@ -332,10 +426,6 @@ void registerScreenDisplay() {
 }
 
 void entrychecking1(GtkEntry *entry, gpointer user_data) {
-    gtk_entry_set_max_length(entry, 3);
-    const char *letter = gtk_entry_get_text(entry);
-
-    printf("%c\n", letter[strlen(letter) - 1]);
 }
 
 void loginScreenDisplay() {
@@ -392,10 +482,6 @@ void quitapp() {
     address.sin_family = AF_INET;
     address.sin_port = htons(PORT);
     address.sin_addr.s_addr = inet_addr(ADDR);
-
-    if (connect(initSocket, (struct sockaddr *)&address, sizeof(address)) < 0) {
-        return "connect_failed";
-    }
 
     closesocket(initSocket);
 
