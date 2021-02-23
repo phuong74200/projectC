@@ -1,12 +1,35 @@
 #include <stdio.h>
 #include <winsock2.h>
 
+#include "admin.c"
 #include "ulities.c"
 
 #define PORT 8080
 
 void slog(char *content) {
     printf("[server]: %s.\n", content);
+}
+
+int isAdmin(char token[100]) {
+    char filePath[100] = "";
+
+    strcat(filePath, token);
+    strcat(filePath, ".xml");
+
+    char accountData[2000] = "";
+
+    if (checkFile(filePath) == 1) {
+        readFile(filePath, &accountData);
+        char role[100] = "";
+        parseXML("role", accountData, &role);
+        if (strcmp(role, "admin") == 0) {
+            return 1;
+        } else {
+            return 0;
+        }
+    } else {
+        return 0;
+    }
 }
 
 int main() {
@@ -64,6 +87,18 @@ int main() {
 
     char res[] = "response";
 
+    struct product item1;
+
+    strcpy(item1.name, "kaki");
+    item1.id = 1;
+    item1.price = 2;
+    item1.quantity = 3;
+    item1.price = 4;
+    item1.quantity = 5;
+    item1.soldQuantity = 6;
+
+    srand(time(NULL));
+
     while (1) {
         int socketAddrSize = sizeof(struct sockaddr);
 
@@ -74,116 +109,206 @@ int main() {
         }
 
         setColor(1);
-        printf("\n\n[reqs-accept]: Recive request from %s\n\n", inet_ntoa(address.sin_addr));
+        printf("\n\n[reqs-accept]: Receive request from %s\n\n", inet_ntoa(address.sin_addr));
         clearColor();
 
         memset(reqBuffer, 0, sizeof(reqBuffer));
 
-        recv(newReq, reqBuffer, sizeof(reqBuffer), 0);
+        DWORD timeout = 1 * 1000;
+        setsockopt(newReq, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout));
+
+        int recv_size = recv(newReq, reqBuffer, sizeof(reqBuffer), 0);
 
         // send(newReq, header, sizeof(header), 0);
         // send(newReq, body, sizeof(body), 0);
 
         // send(newReq, res, sizeof(res), 0);
 
-        printf("[req-content]: %s\n", reqBuffer);
+        if (recv_size != SOCKET_ERROR) {
+            if (WSAGetLastError() != WSAETIMEDOUT) {
+                printf("[req-content]: %s\n", reqBuffer);
 
-        // Write Events following
+                // Write Events following
 
-        reqBuffer[strlen(reqBuffer)];
+                reqBuffer[strlen(reqBuffer)];
 
-        char reqApi[200] = "";
+                char reqApi[200] = "";
 
-        parseXML("api", reqBuffer, &reqApi);
-        printf("[request-api]: %s\n", reqApi);
+                parseXML("api", reqBuffer, &reqApi);
+                printf("[request-api]: %s\n", reqApi);
 
-        // ------ Phuong ------
+                // ------ Phuong ------
 
-        if (strcmp(reqApi, "getProducts") == 0) {
-            printf("accepted\n");
-            char products[100] = "";
-            char id[100] = "";
+                if (strcmp(reqApi, "getProducts") == 0) {
+                    printf("accepted\n");
+                    char products[100] = "";
+                    char id[100] = "";
 
-            parseXML("id", reqBuffer, &id);
-            strcat(id, ".xml");
-            char filePath[100] = "database\\products\\";
-            strcat(filePath, id);
-            readFile(filePath, &products);
-            //printf("%s", reqBuffer);
-            send(newReq, products, sizeof(products), 0);
-            closesocket(newReq);
-        }
+                    parseXML("id", reqBuffer, &id);
+                    strcat(id, ".xml");
+                    char filePath[100] = "database\\products\\";
+                    strcat(filePath, id);
+                    readFile(filePath, &products);
+                    //printf("%s", reqBuffer);
+                    send(newReq, products, sizeof(products), 0);
+                    closesocket(newReq);
+                }
 
-        if (strcmp(reqApi, "login") == 0) {
-            printf("accepted\n");
+                if (strcmp(reqApi, "register") == 0) {
+                    printf("accepted\n");
+                    char accountData[1000] = "";
+                    char username[99] = "";
+                    char password[99] = "";
+                    char userdata[1000] = "";
+                    char response[200] = "";
 
-            char accountData[1000] = "";
-            char username[99] = "";
-            char password[99] = "";
+                    char token[30] = "";
+                    strcpy(token, randstring(30));
 
-            parseXML("username", reqBuffer, &username);
-            parseXML("password", reqBuffer, &password);
+                    parseXML("username", reqBuffer, &username);
+                    parseXML("password", reqBuffer, &password);
 
-            char filePath[100] = "database\\accounts\\";
-            strcat(filePath, username);
-            strcat(filePath, ".xml");
-            readFile(filePath, &accountData);
+                    char filePath[100] = "database\\accounts\\";
+                    char filePath1[100] = "database\\accounts\\";
 
-            printf("reqBuffer: %s\n", reqBuffer);
-            printf("database: %s\n", accountData);
-            printf("filepath: %s\n", filePath);
-            printf("username: %s\n", username);
-            printf("password: %s\n", password);
+                    strcat(filePath, username);
+                    strcat(filePath, ".xml");
 
-            char truePassword[40] = "";
-            parseXML("password", accountData, &truePassword);
-            char trueUsername[40] = "";
-            parseXML("username", accountData, &trueUsername);
+                    strcat(filePath1, token);
+                    strcat(filePath1, ".xml");
 
-            printf("true_username: %s\n", trueUsername);
-            printf("true_password: %s\n", truePassword);
+                    strcat(userdata, "<username>");
+                    strcat(userdata, username);
+                    strcat(userdata, "</username><password>");
+                    strcat(userdata, password);
+                    strcat(userdata, "</password><token>");
+                    strcat(userdata, token);
+                    strcat(userdata, "</token><role>user</role>");
 
-            char status[40] = "login_fail";
+                    if (checkFile(filePath) == 0) {
+                        writeFile(filePath, userdata);
+                        writeFile(filePath1, userdata);
+                        strcat(response, "success");
+                    } else {
+                        strcat(response, "existed");
+                    }
 
-            printf("%d\n", strcmp(password, truePassword));
-            printf("%d\n", strcmp(username, trueUsername));
+                    send(newReq, response, sizeof(response), 0);
+                    closesocket(newReq);
+                }
 
-            if (strcmp(password, truePassword) == 0 && strcmp(username, trueUsername) == 0) {
-                memset(status, 0, sizeof(status));
-                strcpy(status, "login_success");
+                if (strcmp(reqApi, "login") == 0) {
+                    printf("accepted\n");
+
+                    char accountData[1000] = "";
+                    char username[99] = "";
+                    char password[99] = "";
+
+                    parseXML("username", reqBuffer, &username);
+                    parseXML("password", reqBuffer, &password);
+
+                    char filePath[100] = "database\\accounts\\";
+                    strcat(filePath, username);
+                    strcat(filePath, ".xml");
+                    readFile(filePath, &accountData);
+
+                    printf("reqBuffer: %s\n", reqBuffer);
+                    printf("database: %s\n", accountData);
+                    printf("filepath: %s\n", filePath);
+                    printf("username: %s\n", username);
+                    printf("password: %s\n", password);
+
+                    char truePassword[40] = "";
+                    parseXML("password", accountData, &truePassword);
+                    char trueUsername[40] = "";
+                    parseXML("username", accountData, &trueUsername);
+
+                    printf("true_username: %s\n", trueUsername);
+                    printf("true_password: %s\n", truePassword);
+
+                    char status[300] = "login_fail";
+
+                    if (checkFile(filePath) == 1) {
+                        printf("%d\n", strcmp(password, truePassword));
+                        printf("%d\n", strcmp(username, trueUsername));
+                        if (strcmp(password, truePassword) == 0 && strcmp(username, trueUsername) == 0) {
+                            memset(status, 0, sizeof(status));
+                            char fileData[400] = "";
+                            readFile(filePath, &fileData);
+                            char accToken[40] = "";
+                            parseXML("token", fileData, &accToken);
+                            strcpy(status, "<status>login_success</status><token>");
+                            strcat(status, accToken);
+                            strcat(status, "</token>");
+                            printf("token: %s\n", status);
+                        }
+                    } else {
+                        memset(status, 0, sizeof(status));
+                        strcpy(status, "not_exist");
+                    }
+
+                    send(newReq, status, sizeof(status), 0);
+                    closesocket(newReq);
+                }
+
+                // ------ Phuong ------
+
+                if (strcmp(reqApi, "certificate") == 0) {
+                    char filePath[100] = "database\\accounts\\";
+                    char request[100] = "not_exist";
+
+                    char userToken[100] = "";
+                    parseXML("token", reqBuffer, &userToken);
+
+                    strcat(filePath, userToken);
+                    strcat(filePath, ".xml");
+                    if (checkFile(filePath) == 1) {
+                        char userdata[2000] = "";
+                        readFile(filePath, &userdata);
+                        char username[200] = "";
+                        parseXML("role", userdata, &username);
+                        strcpy(request, username);
+                        printf("token result: %s\n", username);
+                    }
+                    send(newReq, request, strlen(request), 0);
+                    closesocket(newReq);
+                }
+
+                if (strcmp(reqApi, "inputNewProducts") == 0) {
+                    printf("accepted\n");
+                    char id[100] = "";
+
+                    parseXML("id", reqBuffer, &id);
+                    strcat(id, ".xml");
+                    char filePath[100] = "database\\products\\";
+                    strcat(filePath, id);
+                    writeFile(filePath, reqBuffer + 28);
+                    closesocket(newReq);
+                }
+                if (strcmp(reqApi, "deleteProducts") == 0) {
+                    printf("accepted\n");
+                    char id[100] = "";
+                    parseXML("id", reqBuffer, &id);
+                    strcat(id, ".xml");
+                    char filePath[100] = "database\\products\\";
+                    strcat(filePath, id);
+                    remove(filePath);
+                    closesocket(newReq);
+                }
+
+                send(newReq, "event not available...", 300, 0);
+                closesocket(newReq);
+            } else {
+                printf("session timed out!\n");
+                closesocket(newReq);
             }
-
-            send(newReq, status, sizeof(status), 0);
+        } else {
+            printf("session rejected!\n");
             closesocket(newReq);
         }
-
-        // ------ Phuong ------
-
-        if (strcmp(reqApi, "inputNewProducts") == 0) {
-            printf("accepted\n");
-            char id[100] = "";
-
-            parseXML("id", reqBuffer, &id);
-            strcat(id, ".xml");
-            char filePath[100] = "database\\products\\";
-            strcat(filePath, id);
-            writeFile(filePath, reqBuffer + 28);
-            closesocket(newReq);
-        }
-        if (strcmp(reqApi, "deleteProducts") == 0) {
-            printf("accepted\n");
-            char id[100] = "";
-            parseXML("id", reqBuffer, &id);
-            strcat(id, ".xml");
-            char filePath[100] = "database\\products\\";
-            strcat(filePath, id);
-            remove(filePath);
-            closesocket(newReq);
-        }
-
-        send(newReq, "event not available...", 300, 0);
-        closesocket(newReq);
     }
+
+    printf("end session\n");
 
     return 0;
 }

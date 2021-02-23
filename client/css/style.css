@@ -116,11 +116,11 @@
 }
 
 .left-side-panel {
-    background: #393D46;
+    background: #F6F7FB;
 }
 
 .hotProductShowCase {
-    background: #F6F7FB;
+    background: #ffffff;
     margin-top: 40px;
 }
 
@@ -218,10 +218,73 @@
     border: 1px solid #F6F7FB;
 }
 
-.product {
-    
+.products-scroll-area {
+    /* background color */
+    background-color: #F6F7FB;
+    box-shadow: none;
+    border: 0px;
 }
 
-.products-scroll-area {
+.products-grid-area {
+    margin-top: 40px;
+    margin-right: 20px;
+    margin-bottom: 40px;
+    margin-left: 20px;
+}
+
+.left-side-icon {
+    padding: 0px;
+    min-width: 0px;
+    min-height: 0px;
     background: #F6F7FB;
+    box-shadow: none;
+    border: 0px;
+    border-radius: 0px;
+    outline: none
+}
+
+.left-side-icon:hover {
+    background: #F6F7FB;
+}
+
+.font-color-red {
+    color: red;
+}
+
+.font-color-black {
+    color: black;
+}
+
+.font-color-green {
+    color: green;
+}
+
+.register-log {
+    color: black;
+}
+
+.popup-menu {
+    background: #ffffff;
+    border: 0px;
+    border-radius: 0px;
+}
+
+.popup-grid {
+    background: #ffffff;
+    border: 0px;
+    border-radius: 0px;
+    margin: 5px;
+}
+
+.popup-grid>* {
+    background: #ffffff;
+    border: 0px;
+    border-radius: 0px;
+    box-shadow: none;
+    margin: 10px;
+    padding: 10px;
+}
+
+.popup-grid>*:hover {
+    background: #f2f2f2;
 }

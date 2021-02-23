@@ -6,6 +6,28 @@
 #include <unistd.h>
 #include <windows.h>
 
+int isValidLet(char c) {
+    if ((c >= 65 && c <= 90) || (c >= 97 && c <= 122) || (c >= 48 && c <= 57)) {
+        return 1;
+    } else {
+        return 0;
+    }
+
+    return 0;
+}
+
+int isValidStr(char str[1000]) {
+    int len = strlen(str);
+    for (int i = 0; i < len; i++) {
+        if ((str[i] >= 65 && str[i] <= 90) || (str[i] >= 97 && str[i] <= 122) || (str[i] >= 48 && str[i] <= 57)) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+    return 0;
+}
+
 char *randstring(int length) {
     char *string = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     size_t stringLen = 26 * 2 + 10 + 7;
