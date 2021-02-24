@@ -1,4 +1,5 @@
 #include <conio.h>
+#include <dirent.h>
 #include <gtk/gtk.h>
 #include <stdio.h>
 #include <winsock2.h>
@@ -21,6 +22,15 @@ SOCKET initSocket;
 
 int initResult;
 
+char accountToken[100] = "";
+
+char glbChar[1000] = "";
+
+void gc(char data[1000]) {
+    memset(glbChar, 0, strlen(glbChar));
+    strcpy(glbChar, data);
+}
+
 char *fetch(char message[200]) {
     initSocket = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -40,7 +50,11 @@ char *fetch(char message[200]) {
 
     send(initSocket, message, strlen(message), 0);
 
-    static char response[40000];
+    static char response[40000] = "";
+
+    for (int i = 0; i < sizeof(response) / sizeof(response[0]); i++) {
+        response[i] = NULL;
+    }
 
     recv(initSocket, &response, 40000, 0);
 
@@ -63,11 +77,6 @@ GtkBuilder *builder;
 void loginScreenDisplay();
 void registerScreenDisplay();
 void landingScreenDisplay();
-
-static void print_hello(GtkWidget *widget, gpointer data) {
-    char *response = fetch("<api>fuong</api>");
-    printf("%s\n", response);
-}
 
 const char *xmlp(char tagName[100], char xmlstr[1000]) {
     char openTag[100] = "";
@@ -129,7 +138,7 @@ const char *myName() {
     return "Flavio";
 }
 
-void loginThread(gpointer data) {
+int loginThread(gpointer data) {
     initSocket = socket(AF_INET, SOCK_STREAM, 0);
 
     struct sockaddr_in address;
@@ -168,6 +177,8 @@ void loginThread(gpointer data) {
         gtk_label_set_text(button, "Wrong username or password");
         gtk_widget_set_visible(button, TRUE);
     }
+
+    return FALSE;
 }
 
 void loginEvent(GtkWidget *widget, gpointer data) {
@@ -217,7 +228,7 @@ void loginEvent(GtkWidget *widget, gpointer data) {
     }
 
     if (validPassword == 1 && validUsername == 1) {
-        g_thread_new("avail", loginThread, request);
+        gdk_threads_add_idle(loginThread, request);
     } else {
         printf("not valid\n");
         button = gtk_builder_get_object(builder, "loginLog");
@@ -243,6 +254,132 @@ void setForm(char *path, char *id) {
     gtk_container_add(GTK_CONTAINER(mainWindow), form);
 }
 
+GtkBuilder *admin_users_manage_window;
+int userPosition = 0;
+
+void changeRole(GtkButton *btn, gpointer user_data) {
+    char value[100] = "";
+    strcpy(value, gtk_button_get_label(btn));
+    if (strcmp(value, "admin") == 0) {
+        gtk_button_set_label(btn, "user");
+    } else {
+        gtk_button_set_label(btn, "admin");
+    }
+}
+
+GObject *adm_user;
+
+void deleteUser(GtkButton *btn, gpointer data) {
+    printf("%d\n", data);
+    GtkWidget *target = gtk_grid_get_child_at(adm_user, 1, GPOINTER_TO_INT(data));
+}
+
+int adm_getUserThread() {
+    initSocket = socket(AF_INET, SOCK_STREAM, 0);
+
+    struct sockaddr_in address;
+
+    address.sin_family = AF_INET;
+    address.sin_port = htons(PORT);
+    address.sin_addr.s_addr = inet_addr(ADDR);
+
+    if (connect(initSocket, (struct sockaddr *)&address, sizeof(address)) < 0) {
+        return "connect_failed";
+    }
+
+    send(initSocket, glbChar, strlen(glbChar), 0);
+
+    gchar XMLBuffer[200];
+
+    recv(initSocket, &XMLBuffer, 2000, 0);
+
+    closesocket(initSocket);
+
+    printf("%s", XMLBuffer);
+
+    int top = atoi(xmlp("index", glbChar)) + 1;
+
+    adm_user = gtk_builder_get_object(admin_users_manage_window, "adm_user_grid");
+
+    GtkStyleContext *context;
+
+    GtkWidget *slot;
+    slot = gtk_label_new(xmlp("index", glbChar));
+    gtk_grid_attach(adm_user, slot, 0, top, 1, 1);
+    context = gtk_widget_get_style_context(slot);
+    gtk_style_context_add_class(context, "adm_user_slot");
+    gtk_widget_set_hexpand(slot, TRUE);
+
+    slot = gtk_label_new(xmlp("username", XMLBuffer));
+    gtk_grid_attach(adm_user, slot, 1, top, 1, 1);
+    context = gtk_widget_get_style_context(slot);
+    gtk_style_context_add_class(context, "adm_user_slot");
+    gtk_widget_set_hexpand(slot, TRUE);
+
+    slot = gtk_label_new(xmlp("token", XMLBuffer));
+    gtk_grid_attach(adm_user, slot, 2, top, 1, 1);
+    context = gtk_widget_get_style_context(slot);
+    gtk_style_context_add_class(context, "adm_user_slot");
+    gtk_widget_set_hexpand(slot, TRUE);
+
+    slot = gtk_label_new(xmlp("password", XMLBuffer));
+    gtk_grid_attach(adm_user, slot, 3, top, 1, 1);
+    context = gtk_widget_get_style_context(slot);
+    gtk_style_context_add_class(context, "adm_user_slot");
+    gtk_widget_set_hexpand(slot, TRUE);
+
+    slot = gtk_button_new_with_label(xmlp("role", XMLBuffer));
+    gtk_grid_attach(adm_user, slot, 4, top, 1, 1);
+    g_signal_connect(slot, "clicked", G_CALLBACK(changeRole), slot);
+    context = gtk_widget_get_style_context(slot);
+    gtk_style_context_add_class(context, "adm_user_slot_btn");
+    gtk_widget_set_hexpand(slot, TRUE);
+
+    slot = gtk_button_new_with_label("delete");
+    gtk_grid_attach(adm_user, slot, 5, top, 1, 1);
+    g_signal_connect(slot, "clicked", G_CALLBACK(deleteUser), top);
+    context = gtk_widget_get_style_context(slot);
+    gtk_style_context_add_class(context, "adm_user_del_btn");
+    gtk_widget_set_hexpand(slot, TRUE);
+
+    gtk_widget_show_all(adm_user);
+
+    printf("buffer: %s\n", XMLBuffer);
+
+    if (userPosition < 60) {
+        printf("pos: %d\n", userPosition);
+        gchar request[1000] = "<api>getUserList</api><index>";
+        char index[4] = "";
+        itoa(userPosition, index, 10);
+        strcat(request, index);
+        strcat(request, "</index><token>");
+        strcat(request, accountToken);
+        strcat(request, "</token>");
+        gc(request);
+        userPosition++;
+        printf("pos: %s\n", request);
+        gdk_threads_add_timeout(100, adm_getUserThread, "");
+    }
+    return FALSE;
+}
+
+void admin_users_manage() {
+    userPosition = 0;
+    admin_users_manage_window = gtk_builder_new();
+    admin_users_manage_window = gtk_builder_new_from_file("UI\\user_manage.xml");
+    GObject *adminWindow = gtk_builder_get_object(admin_users_manage_window, "mainWindow");
+    gtk_window_set_modal(adminWindow, TRUE);
+    gtk_widget_show_all(adminWindow);
+    gchar request[1000] = "<api>getUserList</api><index>0</index><token>";
+    strcat(request, accountToken);
+    strcat(request, "</token>");
+    gc(request);
+
+    if (userPosition <= 30) {
+        gdk_threads_add_timeout(100, adm_getUserThread, "");
+    }
+}
+
 void landingScreenDisplay() {
     setForm("UI\\landing.xml", "landingPage");
     gtk_window_set_title(GTK_WINDOW(mainWindow), "Shoply");
@@ -254,17 +391,31 @@ void landingScreenDisplay() {
         char userToken[100] = "";
         readFile("appcache\\token.ctf", &userToken);
 
+        strcpy(accountToken, userToken);
+
         char request[200] = "<api>certificate</api><token>";
         strcat(request, userToken);
         strcat(request, "</token>");
 
-        char response[200] = "\0";
-        strcpy(response, fetch(request));
+        char *response = "";
+
+        response = fetch(request);
 
         printf("result of token checking: %s\n", response);
 
-        if (strcmp(response, "not_exist") > 0) {
+        if (strcmp(response, "not_exist") == 0) {
+            gtk_button_set_label(button, "log in");
+            printf("token rejected\n");
+        } else {
             gtk_button_set_label(button, "log out");
+            if (strcmp(response, "admin") == 0) {
+                button = gtk_builder_get_object(builder, "ad_users");
+                gtk_widget_show(button);
+                g_signal_connect(button, "clicked", G_CALLBACK(admin_users_manage), NULL);
+
+                button = gtk_builder_get_object(builder, "ad_products");
+                gtk_widget_show(button);
+            }
             printf("token accepted\n");
         }
     }
@@ -357,7 +508,7 @@ void registerEvent() {
         printf("%s\n", response);
     } else if (strlen(username) < 6 || strlen(password) < 6) {
         log = gtk_builder_get_object(builder, "registerLog");
-        gtk_label_set_text(log, "Username or password length smaller than 5");
+        gtk_label_set_text(log, "Username or password length smaller than 6");
         gtk_widget_set_visible(log, TRUE);
         log = gtk_builder_get_object(builder, "registerLog1");
         gtk_widget_set_visible(log, FALSE);

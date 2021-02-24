@@ -288,3 +288,62 @@
 .popup-grid>*:hover {
     background: #f2f2f2;
 }
+
+.adm_user_slot {
+    margin-top: 20px;
+    color: #393D46;
+    box-shadow: none;
+    border-radius: 0px;
+    min-width: 80px;
+    min-height: 40px;
+    transition: all .1s;
+}
+
+.adm_user_slot_btn {
+    margin-top: 20px;
+    margin-right: 10px;
+    border: 2px solid #393D46;
+    background: #393D46;
+    color: #F6F7FB;
+    box-shadow: none;
+    border-radius: 0px;
+    min-height: 40px;
+    transition: all .1s;
+}
+
+.adm_user_slot_btn:hover {
+    background: #F6F7FB;
+    color: #393D46;
+}
+
+.adm_user-viewport {
+    border: 0px;
+    border-radius: 0px;
+    box-shadow: none;
+    background-color: white;
+    margin: 20px;
+}
+
+.adm_user_scroll {
+    border: 0px;
+    border-radius: 0px;
+    box-shadow: none;
+    background-color: white;
+    margin: 10px;
+}
+
+.adm_user_del_btn {
+    min-height: 40px;
+    background: #F6F7FB;
+    border: 2px solid #393D46;
+    box-shadow: none;
+    border-radius: 0px;
+    transition: all .1s;
+    margin-top: 20px;
+}
+
+.adm_user_del_btn:hover {
+    color: #F6F7FB;
+    background: #393D46;
+    border: 2px solid #393D46;
+}

@@ -1,3 +1,4 @@
+#include <dirent.h>
 #include <stdio.h>
 #include <winsock2.h>
 
@@ -11,7 +12,7 @@ void slog(char *content) {
 }
 
 int isAdmin(char token[100]) {
-    char filePath[100] = "";
+    char filePath[100] = "database\\token_index\\";
 
     strcat(filePath, token);
     strcat(filePath, ".xml");
@@ -154,6 +155,21 @@ int main() {
                     closesocket(newReq);
                 }
 
+                if (strcmp(reqApi, "getProducts") == 0) {
+                    printf("accepted\n");
+                    char products[100] = "";
+                    char id[100] = "";
+
+                    parseXML("id", reqBuffer, &id);
+                    strcat(id, ".xml");
+                    char filePath[100] = "database\\products\\";
+                    strcat(filePath, id);
+                    readFile(filePath, &products);
+                    //printf("%s", reqBuffer);
+                    send(newReq, products, sizeof(products), 0);
+                    closesocket(newReq);
+                }
+
                 if (strcmp(reqApi, "register") == 0) {
                     printf("accepted\n");
                     char accountData[1000] = "";
@@ -168,8 +184,8 @@ int main() {
                     parseXML("username", reqBuffer, &username);
                     parseXML("password", reqBuffer, &password);
 
-                    char filePath[100] = "database\\accounts\\";
-                    char filePath1[100] = "database\\accounts\\";
+                    char filePath[100] = "database\\user_index\\";
+                    char filePath1[100] = "database\\token_index\\";
 
                     strcat(filePath, username);
                     strcat(filePath, ".xml");
@@ -186,8 +202,34 @@ int main() {
                     strcat(userdata, "</token><role>user</role>");
 
                     if (checkFile(filePath) == 0) {
+                        DIR *d;
+                        struct dirent *dir;
+                        d = opendir("database\\accounts");
+                        int count = -2;
+                        if (d) {
+                            while ((dir = readdir(d)) != NULL) {
+                                count++;
+                                printf("%d\n", count);
+                            }
+                            closedir(d);
+                        }
+
+                        char bufferCount[100] = "";
+                        char filePath3[100] = "database\\accounts\\";
+                        itoa(count, bufferCount, 10);
+                        strcat(filePath3, bufferCount);
+                        strcat(filePath3, ".xml");
+
+                        strcat(userdata, "<index>");
+                        strcat(userdata, bufferCount);
+                        strcat(userdata, "</index>");
+
+                        printf("buffer of count: %s", filePath3);
+
+                        writeFile(filePath3, userdata);
                         writeFile(filePath, userdata);
                         writeFile(filePath1, userdata);
+
                         strcat(response, "success");
                     } else {
                         strcat(response, "existed");
@@ -207,7 +249,7 @@ int main() {
                     parseXML("username", reqBuffer, &username);
                     parseXML("password", reqBuffer, &password);
 
-                    char filePath[100] = "database\\accounts\\";
+                    char filePath[100] = "database\\user_index\\";
                     strcat(filePath, username);
                     strcat(filePath, ".xml");
                     readFile(filePath, &accountData);
@@ -252,9 +294,158 @@ int main() {
                 }
 
                 // ------ Phuong ------
+                if (strcmp(reqApi, "deleteUser") == 0) {
+                    char token[100] = "";
+                    parseXML("token", reqBuffer, &token);
+                    char username[100] = "";
+                    parseXML("username", reqBuffer, &username);
+                    if (isAdmin(token) == 1) {
+                        printf("token accepted\n");
+                        char filePath[100] = "database\\user_index\\";
+                        strcat(filePath, username);
+                        strcat(filePath, ".xml");
+                        if (checkFile(filePath) == 1) {
+                            char userdata[1000] = "";
+                            readFile(filePath, &userdata);
+
+                            char uindex[100] = "";
+                            char uname[100] = "";
+                            char utoken[100] = "";
+
+                            char findex[1000] = "database\\accounts\\";
+                            char fname[1000] = "database\\user_index\\";
+                            char ftoken[1000] = "database\\token_index\\";
+
+                            parseXML("index", userdata, &uindex);
+                            parseXML("username", userdata, &uname);
+                            parseXML("token", userdata, &utoken);
+
+                            strcat(findex, uindex);
+                            strcat(findex, ".xml");
+
+                            strcat(fname, uname);
+                            strcat(fname, ".xml");
+
+                            strcat(ftoken, utoken);
+                            strcat(ftoken, ".xml");
+
+                            remove(findex);
+                            remove(fname);
+                            remove(ftoken);
+
+                            printf("%s\n", findex);
+                            printf("%s\n", fname);
+                            printf("%s\n", ftoken);
+                        }
+                    } else {
+                        printf("%s -- token rejected\n", token);
+                    }
+                    closesocket(newReq);
+                }
+
+                if (strcmp(reqApi, "switchRole") == 0) {
+                    char token[100] = "";
+                    parseXML("token", reqBuffer, &token);
+                    char username[100] = "";
+                    parseXML("username", reqBuffer, &username);
+                    if (isAdmin(token) == 1) {
+                        printf("token accepted\n");
+                        char filePath[100] = "database\\user_index\\";
+                        strcat(filePath, username);
+                        strcat(filePath, ".xml");
+                        if (checkFile(filePath) == 1) {
+                            char userdata[1000] = "";
+                            readFile(filePath, &userdata);
+
+                            char uindex[100] = "";
+                            char uname[100] = "";
+                            char utoken[100] = "";
+                            char upass[100] = "";
+                            char urole[100] = "";
+
+                            char findex[1000] = "database\\accounts\\";
+                            char fname[1000] = "database\\user_index\\";
+                            char ftoken[1000] = "database\\token_index\\";
+
+                            parseXML("index", userdata, &uindex);
+                            parseXML("username", userdata, &uname);
+                            parseXML("token", userdata, &utoken);
+                            parseXML("password", userdata, &upass);
+                            parseXML("role", userdata, &urole);
+
+                            strcat(findex, uindex);
+                            strcat(findex, ".xml");
+
+                            strcat(fname, uname);
+                            strcat(fname, ".xml");
+
+                            strcat(ftoken, utoken);
+                            strcat(ftoken, ".xml");
+
+                            char newData[1000] = "<username>";
+
+                            strcat(newData, uname);
+                            strcat(newData, "</username><password>");
+                            strcat(newData, upass);
+                            strcat(newData, "</password><token>");
+                            strcat(newData, utoken);
+                            strcat(newData, "</token><role>");
+
+                            if (strcmp(urole, "admin") == 0) {
+                                strcat(newData, "user</role><index>");
+                            } else {
+                                strcat(newData, "admin</role><index>");
+                            }
+
+                            strcat(newData, uindex);
+                            strcat(newData, "index");
+
+                            writeFile(findex, newData);
+                            writeFile(fname, newData);
+                            writeFile(ftoken, newData);
+
+                            printf("%s\n", findex);
+                            printf("%s\n", fname);
+                            printf("%s\n", ftoken);
+                        }
+                    } else {
+                        printf("%s -- token rejected\n", token);
+                    }
+                    closesocket(newReq);
+                }
+
+                if (strcmp(reqApi, "getUserList") == 0) {
+                    int count = 0;
+
+                    char token[100] = "";
+                    parseXML("token", reqBuffer, &token);
+
+                    if (isAdmin(token) == 1) {
+                        char index[100] = "";
+                        parseXML("index", reqBuffer, &index);
+
+                        char userdata[200] = "";
+                        char filePath[200] = "database\\accounts\\";
+                        strcat(filePath, index);
+                        strcat(filePath, ".xml");
+
+                        if (checkFile(filePath) == 1) {
+                            readFile(filePath, &userdata);
+                            printf("%s\n", userdata);
+                            send(newReq, userdata, strlen(userdata), 0);
+                        } else {
+                            char none[] = "<username>(none)</username><password>(none)</password><token>(none)</token><role>(none)</role>";
+                            send(newReq, none, strlen(none), 0);
+                        }
+                        printf("%s\n", filePath);
+                    } else {
+                        send(newReq, "no_permisson", 100, 0);
+                    }
+                    closesocket(newReq);
+                }
 
                 if (strcmp(reqApi, "certificate") == 0) {
-                    char filePath[100] = "database\\accounts\\";
+                    char filePath[100] = "database\\token_index\\";
                     char request[100] = "not_exist";
 
                     char userToken[100] = "";
@@ -270,6 +461,7 @@ int main() {
                         strcpy(request, username);
                         printf("token result: %s\n", username);
                     }
+                    printf("token result: %s\n", request);
                     send(newReq, request, strlen(request), 0);
                     closesocket(newReq);
                 }
