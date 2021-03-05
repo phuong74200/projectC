@@ -19,7 +19,7 @@
         + Chạy file .\client\compiler.bat
         Sau khi chạy xong 2 file này sẽ xuất hiện lần lượt 2 file:
         + .\server\server.exe
-        + .\server\client.exe
+        + .\client\client.exe
         Chỉ cần chạy 2 file này là được
     - Cách 2:
         + Mở msys2
