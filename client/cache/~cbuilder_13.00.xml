@@ -2,38 +2,6 @@
 <!-- Generated with glade 3.38.2 -->
 <interface>
     <requires lib="gtk+" version="3.6" />
-    <object class="GtkImage" id="burgerMenuImageBtn">
-        <property name="visible">True</property>
-        <property name="can-focus">False</property>
-        <property name="icon-name">open-menu-symbolic</property>
-    </object>
-    <object class="GtkImage" id="cartImageBtn">
-        <property name="visible">True</property>
-        <property name="can-focus">False</property>
-        <property name="pixel-size">24</property>
-        <property name="icon-name">view-grid-symbolic</property>
-    </object>
-    <object class="GtkImage" id="facebook">
-        <property name="visible">True</property>
-        <property name="can-focus">False</property>
-        <property name="pixbuf">..\assets\facebook.png</property>
-    </object>
-    <object class="GtkImage" id="homeImageBtn">
-        <property name="visible">True</property>
-        <property name="can-focus">False</property>
-        <property name="pixel-size">24</property>
-        <property name="icon-name">user-home-symbolic</property>
-    </object>
-    <object class="GtkImage" id="instagram">
-        <property name="visible">True</property>
-        <property name="can-focus">False</property>
-        <property name="pixbuf">..\assets\instagram.png</property>
-    </object>
-    <object class="GtkImage" id="linkedin">
-        <property name="visible">True</property>
-        <property name="can-focus">False</property>
-        <property name="pixbuf">..\assets\linkedin.png</property>
-    </object>
     <object class="GtkWindow" id="mainWindow">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
@@ -46,17 +14,6 @@
         <style>
             <class name="login-window" />
         </style>
-    </object>
-    <object class="GtkImage" id="searchImageBtn">
-        <property name="visible">True</property>
-        <property name="can-focus">False</property>
-        <property name="pixel-size">24</property>
-        <property name="icon-name">folder-saved-search-symbolic</property>
-    </object>
-    <object class="GtkImage" id="twitter">
-        <property name="visible">True</property>
-        <property name="can-focus">False</property>
-        <property name="pixbuf">..\assets\twitter.png</property>
     </object>
     <!-- n-columns=3 n-rows=4 -->
 </interface>

@@ -167,6 +167,7 @@ int loginThread(gpointer data) {
 
     printf("%s\n", stat);
     printf("%s\n", token);
+    printf("%s\n", XMLBuffer);
 
     if (strcmp(stat, "login_success") == 0) {
         printf("login sucess\n");
@@ -257,38 +258,38 @@ void setForm(char *path, char *id) {
 GtkBuilder *admin_users_manage_window;
 int userPosition = 0;
 
-void changeRole(GtkButton *btn, gpointer user_data) {
+GObject *adm_user;
+
+void changeRole(GtkButton *btn, gpointer data) {
     char value[100] = "";
     strcpy(value, gtk_button_get_label(btn));
-    if (strcmp(value, "admin") == 0) {
-        gtk_button_set_label(btn, "user");
-    } else {
-        gtk_button_set_label(btn, "admin");
+
+    GtkWidget *target = gtk_grid_get_child_at(adm_user, 1, GPOINTER_TO_INT(data));
+    printf("%s", gtk_label_get_text(target));
+
+    char username[100] = "";
+
+    strcpy(username, gtk_label_get_text(target));
+
+    char request[1000] = "<api>switchRole</api><token>";
+    strcat(request, accountToken);
+    strcat(request, "</token><username>");
+    strcat(request, username);
+    strcat(request, "</username>");
+
+    if (!strcmp(username, "(deleted)") == 0) {
+        if (strcmp(value, "admin") == 0) {
+            gtk_button_set_label(btn, "user");
+        } else {
+            gtk_button_set_label(btn, "admin");
+        }
+        printf("change it\n");
+        fetch(request);
     }
 }
 
-GObject *adm_user;
-
-void deleteUserThread(gpointer data) {
-    initSocket = socket(AF_INET, SOCK_STREAM, 0);
-
-    if (initSocket == INVALID_SOCKET) {
-        return "init_socket_failed";
-    }
-
-    struct sockaddr_in address;
-
-    address.sin_family = AF_INET;
-    address.sin_port = htons(PORT);
-    address.sin_addr.s_addr = inet_addr(ADDR);
-
-    if (connect(initSocket, (struct sockaddr *)&address, sizeof(address)) < 0) {
-        return "connect_failed";
-    }
-
-    send(initSocket, data, strlen(data), 0);
-    closesocket(initSocket);
-    return FALSE;
+void none() {
+    return 0;
 }
 
 void deleteUser(GtkButton *btn, gpointer data) {
@@ -305,10 +306,39 @@ void deleteUser(GtkButton *btn, gpointer data) {
     strcat(request, username);
     strcat(request, "</username>");
 
-    gtk_grid_remove_row(adm_user, GPOINTER_TO_INT(data));
+    if (!strcmp(username, "(deleted)") == 0) {
+        printf("delete it\n");
+        fetch(request);
+    }
 
-    gdk_threads_add_timeout(50, deleteUserThread, request);
+    GtkWidget *deltarget;
+
+    deltarget = gtk_grid_get_child_at(adm_user, 0, GPOINTER_TO_INT(data));
+    gtk_label_set_text(deltarget, "(deleted)");
+
+    deltarget = gtk_grid_get_child_at(adm_user, 1, GPOINTER_TO_INT(data));
+    gtk_label_set_text(deltarget, "(deleted)");
+
+    deltarget = gtk_grid_get_child_at(adm_user, 2, GPOINTER_TO_INT(data));
+    gtk_label_set_text(deltarget, "(deleted)");
+
+    deltarget = gtk_grid_get_child_at(adm_user, 3, GPOINTER_TO_INT(data));
+    gtk_label_set_text(deltarget, "(deleted)");
+
+    deltarget = gtk_grid_get_child_at(adm_user, 4, GPOINTER_TO_INT(data));
+    gtk_button_set_label(deltarget, "(deleted)");
+
+    deltarget = gtk_grid_get_child_at(adm_user, 5, GPOINTER_TO_INT(data));
+    gtk_button_set_label(deltarget, "unable");
 }
+
+int listLength = 15;
+int currentListLen = 0;
+int loadEnd = 1;
+int deletedUser = 0;
+
+GtkStyleContext *context;
+GtkWidget *slot;
 
 int adm_getUserThread() {
     initSocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -337,11 +367,7 @@ int adm_getUserThread() {
 
     adm_user = gtk_builder_get_object(admin_users_manage_window, "adm_user_grid");
 
-    GtkStyleContext *context;
-
-    GtkWidget *slot;
-
-    if (strcmp(xmlp("username", XMLBuffer), "(none)") != 0) {
+    if (strcmp(xmlp("username", XMLBuffer), "(none)") != 0 && strlen(XMLBuffer) > 0) {
         slot = gtk_label_new(xmlp("index", glbChar));
         gtk_grid_attach(adm_user, slot, 0, top, 1, 1);
         context = gtk_widget_get_style_context(slot);
@@ -368,7 +394,7 @@ int adm_getUserThread() {
 
         slot = gtk_button_new_with_label(xmlp("role", XMLBuffer));
         gtk_grid_attach(adm_user, slot, 4, top, 1, 1);
-        g_signal_connect(slot, "clicked", G_CALLBACK(changeRole), slot);
+        g_signal_connect(slot, "clicked", G_CALLBACK(changeRole), GINT_TO_POINTER(top));
         context = gtk_widget_get_style_context(slot);
         gtk_style_context_add_class(context, "adm_user_slot_btn");
         gtk_widget_set_hexpand(slot, TRUE);
@@ -387,13 +413,13 @@ int adm_getUserThread() {
             gtk_style_context_add_class(context, "adm_user_del_btn");
             gtk_widget_set_hexpand(slot, TRUE);
         }
-
-        gtk_widget_show_all(adm_user);
+    } else {
+        listLength++;
     }
 
     printf("buffer: %s\n", XMLBuffer);
 
-    if (userPosition < 60) {
+    if (userPosition < listLength) {
         printf("pos: %d\n", userPosition);
         gchar request[1000] = "<api>getUserList</api><index>";
         char index[4] = "";
@@ -405,9 +431,32 @@ int adm_getUserThread() {
         gc(request);
         userPosition++;
         printf("pos: %s\n", request);
-        gdk_threads_add_timeout(10, adm_getUserThread, "");
+        gdk_threads_add_timeout(10 + listLength, adm_getUserThread, "");
     }
+
+    gtk_widget_show_all(adm_user);
+
     return FALSE;
+}
+
+int scollable = 1;
+
+void enableScroll() {
+    scollable = 1;
+    return FALSE;
+}
+
+void admUserEdgeReach(GtkScrolledWindow *scrolled_window, GtkPositionType pos, gpointer user_data) {
+    if (scollable == 1 && pos == GTK_POS_BOTTOM) {
+        scollable = 0;
+        listLength += 5;
+        gdk_threads_add_timeout(100, adm_getUserThread, "");
+        gdk_threads_add_timeout(500, enableScroll, "");
+    }
+}
+
+void addItemThread(gpointer data) {
+    printf("addItem!");
 }
 
 void admin_users_manage() {
@@ -415,15 +464,21 @@ void admin_users_manage() {
     admin_users_manage_window = gtk_builder_new();
     admin_users_manage_window = gtk_builder_new_from_file("UI\\user_manage.xml");
     GObject *adminWindow = gtk_builder_get_object(admin_users_manage_window, "mainWindow");
+
+    GObject *scollWindow = gtk_builder_get_object(admin_users_manage_window, "adm_scoll_window");
+    g_signal_connect(scollWindow, "edge-reached", G_CALLBACK(admUserEdgeReach), "");
+
+    GObject *addItemBtn = gtk_builder_get_object(admin_users_manage_window, "addItemBtn");
+    g_signal_connect(scollWindow, "clicked", G_CALLBACK(addItemThread), "");
+
     gtk_window_set_modal(adminWindow, TRUE);
     gtk_widget_show_all(adminWindow);
     gchar request[1000] = "<api>getUserList</api><index>0</index><token>";
     strcat(request, accountToken);
     strcat(request, "</token>");
     gc(request);
-
-    if (userPosition <= 30) {
-        gdk_threads_add_timeout(10, adm_getUserThread, "");
+    if (userPosition <= 1) {
+        gdk_threads_add_timeout(250, adm_getUserThread, "");
     }
 }
 

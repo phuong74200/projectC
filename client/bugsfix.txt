@@ -1,0 +1,6 @@
+- Fix crash when call function fetch()
+- Fix crash on click register
+- Fix crash on click login
+- Fix crash on click add item to shop
+- Fix empty users list
+- Fix multiple users list append

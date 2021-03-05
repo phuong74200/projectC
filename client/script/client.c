@@ -10,7 +10,7 @@
 
 // server's local IPv4 address
 
-#define ADDR "10.1.85.25"
+#define ADDR "10.1.107.161"
 
 void slog(char *content) {
     printf("[client]: %s.\n", content);
@@ -335,6 +335,7 @@ void deleteUser(GtkButton *btn, gpointer data) {
 int listLength = 15;
 int loadEnd = 1;
 int deletedUser = 0;
+int user_firstLoad = 1;
 
 GtkStyleContext *context;
 GtkWidget *slot;
@@ -415,7 +416,7 @@ int adm_getUserThread() {
                 gtk_style_context_add_class(context, "adm_user_del_btn");
                 gtk_widget_set_hexpand(slot, TRUE);
             }
-        } else {
+        } else if (user_firstLoad == 1) {
             listLength++;
         }
 
@@ -440,6 +441,98 @@ int adm_getUserThread() {
     return FALSE;
 }
 
+int getproducts_end = 1;
+int productPosition = 0;
+int productListLength = 15;
+
+GObject *adm_product_grid;
+
+int adm_getProductList() {
+    if (getproducts_end == 1) {
+        getproducts_end = 0;
+
+        char request[300] = "<api>getProduct</api><index>";
+
+        char sindex[30];
+        itoa(productPosition, sindex, 10);
+
+        strcat(request, sindex);
+        strcat(request, "</index>");
+
+        char *XMLBuffer = fetch(request);
+
+        printf("\n ------------------ %s\n", XMLBuffer);
+
+        if (strcmp(XMLBuffer, "none") != 0) {
+            adm_product_grid = gtk_builder_get_object(admin_users_manage_window, "adm_product_grid");
+            int top = productPosition + 1;
+
+            slot = gtk_label_new(xmlp("index", XMLBuffer));
+            gtk_grid_attach(adm_product_grid, slot, 0, top, 1, 1);
+            context = gtk_widget_get_style_context(slot);
+            gtk_style_context_add_class(context, "adm_user_slot");
+            gtk_widget_set_hexpand(slot, TRUE);
+
+            slot = gtk_label_new(xmlp("name", XMLBuffer));
+            gtk_grid_attach(adm_product_grid, slot, 1, top, 1, 1);
+            context = gtk_widget_get_style_context(slot);
+            gtk_style_context_add_class(context, "adm_user_slot");
+            gtk_widget_set_hexpand(slot, TRUE);
+
+            slot = gtk_label_new(xmlp("price", XMLBuffer));
+            gtk_grid_attach(adm_product_grid, slot, 2, top, 1, 1);
+            context = gtk_widget_get_style_context(slot);
+            gtk_style_context_add_class(context, "adm_user_slot");
+            gtk_widget_set_hexpand(slot, TRUE);
+
+            slot = gtk_entry_new();
+            gtk_entry_set_text(slot, xmlp("sale", XMLBuffer));
+            gtk_grid_attach(adm_product_grid, slot, 3, top, 1, 1);
+            gtk_entry_set_alignment(slot, 0.5);
+
+            slot = gtk_button_new_with_label("delete");
+            gtk_grid_attach(adm_product_grid, slot, 6, top, 1, 1);
+
+            slot = gtk_button_new_with_label("save");
+            gtk_grid_attach(adm_product_grid, slot, 5, top, 1, 1);
+
+            GdkColor *color1;
+
+            GtkWidget *colorPick = gtk_grid_new();
+            gdk_color_parse(xmlp("color1", XMLBuffer), &color1);
+            GtkWidget *colorBtn1;
+            colorBtn1 = gtk_color_button_new_with_color(&color1);
+            gtk_grid_attach(colorPick, colorBtn1, 0, 0, 1, 1);
+            gtk_widget_set_hexpand(colorBtn1, TRUE);
+            gtk_widget_set_vexpand(colorBtn1, TRUE);
+
+            gdk_color_parse(xmlp("color2", XMLBuffer), &color1);
+            GtkWidget *colorBtn2;
+            colorBtn2 = gtk_color_button_new_with_color(&color1);
+            gtk_grid_attach(colorPick, colorBtn2, 1, 0, 1, 1);
+            gtk_widget_set_hexpand(colorBtn2, TRUE);
+            gtk_widget_set_vexpand(colorBtn2, TRUE);
+
+            gdk_color_parse(xmlp("color3", XMLBuffer), &color1);
+            GtkWidget *colorBtn3;
+            colorBtn3 = gtk_color_button_new_with_color(&color1);
+            gtk_grid_attach(colorPick, colorBtn3, 2, 0, 1, 1);
+            gtk_widget_set_hexpand(colorBtn3, TRUE);
+            gtk_widget_set_vexpand(colorBtn3, TRUE);
+
+            gtk_grid_attach(adm_product_grid, colorPick, 7, top, 1, 1);
+        }
+
+        if (productPosition < productListLength) {
+            productPosition++;
+            gdk_threads_add_timeout(100, adm_getProductList, "");
+            getproducts_end = 1;
+        }
+    }
+    gtk_widget_show_all(adm_product_grid);
+    return FALSE;
+}
+
 int scollable = 1;
 
 void enableScroll() {
@@ -449,6 +542,7 @@ void enableScroll() {
 
 void admUserEdgeReach(GtkScrolledWindow *scrolled_window, GtkPositionType pos, gpointer user_data) {
     if (scollable == 1 && pos == GTK_POS_BOTTOM) {
+        user_firstLoad = 0;
         loadEnd = 1;
         scollable = 0;
         listLength += 15;
@@ -686,6 +780,8 @@ void addItemEvent(gpointer data) {
 void admin_users_manage() {
     loadEnd = 1;
     userPosition = 0;
+    productPosition = 0;
+    getproducts_end = 1;
     admin_users_manage_window = gtk_builder_new();
     admin_users_manage_window = gtk_builder_new_from_file("UI\\user_manage.xml");
     GObject *adminWindow = gtk_builder_get_object(admin_users_manage_window, "mainWindow");
@@ -705,6 +801,158 @@ void admin_users_manage() {
     if (userPosition <= 1) {
         gdk_threads_add_timeout(250, adm_getUserThread, "");
     }
+    if (productPosition <= 1) {
+        gdk_threads_add_timeout(500, adm_getProductList, "");
+    }
+}
+
+GtkBuilder *user_cart;
+
+int cartClickable = 1;
+
+void resetCartClick() {
+    cartClickable = 1;
+    return FALSE;
+}
+
+GtkWidget *consumePrice;
+
+deleteCartItem(GtkWidget *w, gpointer name1) {
+    int consume = 0;
+    char filePath[100] = "appcache\\cart\\";
+    strcat(filePath, name1);
+    printf("-- filepath: %s\n", filePath);
+    remove(filePath);
+    GtkWidget *wparent = gtk_widget_get_parent(w);
+
+    GObject *price = gtk_grid_get_child_at(wparent, 1, 0);
+    GObject *quantity = gtk_grid_get_child_at(wparent, 2, 0);
+
+    consume = atoi(gtk_label_get_text(consumePrice)) - atoi(gtk_label_get_text(price)) * atoi(gtk_label_get_text(quantity));
+
+    char consumeStr[100] = "";
+    itoa(consume, consumeStr, 10);
+
+    gtk_label_set_text(consumePrice, consumeStr);
+
+    gtk_widget_destroy(wparent);
+}
+
+void user_cart_event() {
+    user_cart = gtk_builder_new();
+    user_cart = gtk_builder_new_from_file("UI\\cart.xml");
+    GObject *user_cart_window = gtk_builder_get_object(user_cart, "user_cartWindow");
+    GtkWidget *user_cart_grid = gtk_builder_get_object(user_cart, "user_cart");
+    gtk_window_set_modal(user_cart_window, TRUE);
+    gtk_widget_show_all(user_cart_window);
+
+    int consume = 0;
+
+    DIR *d;
+    struct dirent *dir;
+    d = opendir("appcache\\cart");
+    int count = -2;
+    int index = 0;
+    if (d) {
+        while ((dir = readdir(d)) != NULL) {
+            count++;
+            if (count > 0) {
+                char filePath[1000] = "appcache\\cart\\";
+                char request[1000] = "<api>getProduct</api><index>";
+                strcat(request, dir->d_name);
+                strcat(request, "</index>");
+
+                char *response = fetch(request);
+
+                printf("%s\n", response);
+
+                char itemQuantity[10] = "0";
+                strcat(filePath, dir->d_name);
+                readFile(filePath, &itemQuantity);
+
+                if (strcmp(itemQuantity, "0") != 0) {
+                    GtkWidget *itemGrid = gtk_grid_new();
+                    GObject *label;
+
+                    label = gtk_label_new(xmlp("name", response));
+                    gtk_grid_attach(itemGrid, label, 0, 0, 1, 1);
+
+                    label = gtk_label_new(xmlp("price", response));
+                    gtk_grid_attach(itemGrid, label, 1, 0, 1, 1);
+
+                    label = gtk_label_new(itemQuantity);
+                    gtk_grid_attach(itemGrid, label, 2, 0, 1, 1);
+
+                    consume += atoi(xmlp("price", response)) * atoi(itemQuantity);
+
+                    GtkStyleContext *context;
+                    label = gtk_button_new_with_label("Delete");
+                    gtk_grid_attach(itemGrid, label, 3, 0, 1, 1);
+
+                    gtk_grid_attach(user_cart_grid, itemGrid, 0, index, 1, 1);
+                    context = gtk_widget_get_style_context(label);
+                    gtk_style_context_add_class(context, "cart_del_btn");
+                    g_signal_connect(label, "clicked", G_CALLBACK(deleteCartItem), xmlp("index", response));
+
+                    gtk_grid_set_row_homogeneous(itemGrid, TRUE);
+                    gtk_grid_set_column_homogeneous(itemGrid, TRUE);
+                    gtk_widget_set_hexpand(itemGrid, TRUE);
+
+                    index++;
+                }
+            }
+        }
+        closedir(d);
+    }
+
+    char consumeStr[100] = "";
+    itoa(consume, consumeStr, 10);
+    consumePrice = gtk_builder_get_object(user_cart, "cart_consume");
+    gtk_label_set_text(consumePrice, consumeStr);
+    gtk_widget_show_all(user_cart_grid);
+    gtk_window_set_position(GTK_WINDOW(user_cart_window), GTK_WIN_POS_CENTER_ALWAYS);
+}
+
+void addItemToCartThread(gpointer top) {
+    cartClickable = 0;
+
+    int index = GPOINTER_TO_INT(top);
+
+    char filePath[1000] = "appcache\\cart\\";
+
+    char sindex[2] = "";
+
+    itoa(index, sindex, 10);
+
+    strcat(filePath, sindex);
+
+    printf("%s\n", filePath);
+
+    if (checkFile(filePath) == 0) {
+        writeFile(filePath, "1");
+    } else {
+        char quantity[100] = "";
+        readFile(filePath, &quantity);
+        char value = atoi(quantity);
+        value++;
+        itoa(value, sindex, 10);
+        writeFile(filePath, sindex);
+    }
+
+    return FALSE;
+}
+
+void addItemToCartEvent(GtkWidget *w, gpointer top) {
+    int index = GPOINTER_TO_INT(top);
+    printf("--- add to cart  1! %d \n", index);
+    if (cartClickable == 1) {
+        gdk_threads_add_timeout(50, addItemToCartThread, GINT_TO_POINTER(index));
+        gdk_threads_add_timeout(500, resetCartClick, GINT_TO_POINTER(index));
+    }
+}
+
+void colorPicker(GtkWidget *item, gpointer color) {
+    printf("%s\n", color);
 }
 
 int addProductsThread(gpointer top) {
@@ -736,13 +984,16 @@ int addProductsThread(gpointer top) {
 
         productForm = gtk_builder_get_object(product, "productForm");
 
-        gtk_grid_attach(grid, productForm, 0, index + 1, 1, 1);
+        gtk_grid_attach(grid, productForm, 0, index, 1, 1);
 
         obj = gtk_builder_get_object(product, "product_name");
         gtk_label_set_text(obj, xmlp("name", response));
 
         obj = gtk_builder_get_object(product, "product_des");
         gtk_label_set_text(obj, xmlp("des", response));
+
+        GObject *cartBtn = gtk_builder_get_object(product, "addToCartBtn");
+        g_signal_connect(cartBtn, "clicked", G_CALLBACK(addItemToCartEvent), GINT_TO_POINTER(index));
 
         char price[10];
         strcpy(price, "$");
@@ -752,19 +1003,21 @@ int addProductsThread(gpointer top) {
         gtk_label_set_text(obj, price);
 
         GdkColor color;
-        char rgb[1000];
 
         obj = gtk_builder_get_object(product, "product_form_color1");
         gdk_color_parse(xmlp("color1", response), &color);
         gtk_widget_modify_bg(GTK_WIDGET(obj), GTK_STATE_NORMAL, &color);
+        g_signal_connect(obj, "clicked", G_CALLBACK(colorPicker), xmlp("color1", response));
 
         obj = gtk_builder_get_object(product, "product_form_color2");
         gdk_color_parse(xmlp("color2", response), &color);
         gtk_widget_modify_bg(GTK_WIDGET(obj), GTK_STATE_NORMAL, &color);
+        g_signal_connect(obj, "clicked", G_CALLBACK(colorPicker), xmlp("color2", response));
 
         obj = gtk_builder_get_object(product, "product_form_color3");
         gdk_color_parse(xmlp("color3", response), &color);
         gtk_widget_modify_bg(GTK_WIDGET(obj), GTK_STATE_NORMAL, &color);
+        g_signal_connect(obj, "clicked", G_CALLBACK(colorPicker), xmlp("color3", response));
 
         gtk_widget_show_all(grid);
 
@@ -775,6 +1028,8 @@ int addProductsThread(gpointer top) {
     return FALSE;
 }
 
+void user_cart_event();
+
 void landingScreenDisplay() {
     setForm("UI\\landing.xml", "landingPage");
     gtk_window_set_title(GTK_WINDOW(mainWindow), "Shoply");
@@ -782,6 +1037,7 @@ void landingScreenDisplay() {
 
     button = gtk_builder_get_object(builder, "landingLoginBtn");
     g_signal_connect(button, "clicked", G_CALLBACK(loginScreenDisplay), NULL);
+
     if (checkFile("appcache\\token.ctf") == 1) {
         char userToken[100] = "";
         readFile("appcache\\token.ctf", &userToken);
@@ -815,9 +1071,15 @@ void landingScreenDisplay() {
         }
     }
 
-    for (int i = 1; i < 20; i++) {
-        gdk_threads_add_timeout(1000 + i * 10, addProductsThread, GINT_TO_POINTER(i));
+    for (int i = 0; i < 20; i++) {
+        gdk_threads_add_timeout(100 + i * 10, addProductsThread, GINT_TO_POINTER(i));
     }
+
+    button = gtk_builder_get_object(builder, "cartBtn");
+    g_signal_connect(button, "clicked", G_CALLBACK(user_cart_event), NULL);
+
+    button = gtk_builder_get_object(builder, "homeBtn");
+    g_signal_connect(button, "clicked", G_CALLBACK(landingScreenDisplay), NULL);
 }
 
 void registerEvent() {

@@ -149,7 +149,13 @@ int main() {
                     strcat(id, ".xml");
                     char filePath[100] = "database\\products\\";
                     strcat(filePath, id);
-                    readFile(filePath, &products);
+
+                    if (checkFile(filePath) == 1) {
+                        readFile(filePath, &products);
+                    } else {
+                        strcpy(products, "<status>not_exist</status>")
+                    }
+
                     //printf("%s", reqBuffer);
                     send(newReq, products, sizeof(products), 0);
                     closesocket(newReq);
@@ -236,6 +242,112 @@ int main() {
                     }
 
                     send(newReq, response, sizeof(response), 0);
+                    closesocket(newReq);
+                }
+
+                if (strcmp(reqApi, "getProduct") == 0) {
+                    char index[10];
+                    char filePath[1000] = "database\\products_index\\";
+
+                    parseXML("index", reqBuffer, &index);
+                    strcat(filePath, index);
+                    strcat(filePath, ".xml");
+
+                    char response[1000] = "none";
+
+                    if (checkFile(filePath) == 1) {
+                        char productData[4000];
+                        readFile(filePath, &productData);
+                        strcpy(response, productData);
+                    } else {
+                        strcpy(response, "<status>not_exist</status>");
+                    }
+
+                    send(newReq, response, sizeof(response), 0);
+                    closesocket(newReq);
+                }
+
+                if (strcmp(reqApi, "addProduct") == 0) {
+                    DIR *d;
+                    struct dirent *dir;
+                    d = opendir("database\\products_index");
+                    int count = -2;
+                    if (d) {
+                        while ((dir = readdir(d)) != NULL) {
+                            count++;
+                            printf("%d\n", count);
+                        }
+                        closedir(d);
+                    }
+
+                    char color1[1000] = "";
+                    char color2[1000] = "";
+                    char color3[1000] = "";
+                    char price[1000] = "";
+                    char tag[1000] = "";
+                    char des[1000] = "";
+                    char sale[1000] = "";
+                    char name[1000] = "";
+                    char data[4000] = "";
+
+                    parseXML("color1", reqBuffer, &color1);
+                    parseXML("color2", reqBuffer, &color2);
+                    parseXML("color3", reqBuffer, &color3);
+                    parseXML("price", reqBuffer, &price);
+                    parseXML("tag", reqBuffer, &tag);
+                    parseXML("des", reqBuffer, &des);
+                    parseXML("sale", reqBuffer, &sale);
+                    parseXML("name", reqBuffer, &name);
+
+                    char pathIndex[1000] = "database\\products_index\\";
+                    char pathTags[1000] = "database\\products_tags\\";
+
+                    strcpy(data, "<color1>");
+                    strcat(data, color1);
+                    strcat(data, "</color1>");
+
+                    strcat(data, "<color2>");
+                    strcat(data, color2);
+                    strcat(data, "</color2>");
+
+                    strcat(data, "<color3>");
+                    strcat(data, color3);
+                    strcat(data, "</color3>");
+
+                    strcat(data, "<price>");
+                    strcat(data, price);
+                    strcat(data, "</price>");
+
+                    strcat(data, "<des>");
+                    strcat(data, des);
+                    strcat(data, "</des>");
+
+                    strcat(data, "<name>");
+                    strcat(data, name);
+                    strcat(data, "</name>");
+
+                    strcat(data, "<sale>");
+                    strcat(data, sale);
+                    strcat(data, "</sale>");
+
+                    strcat(pathTags, tag);
+                    strcat(pathTags, name);
+                    strcat(pathTags, randstring(4));
+                    strcat(pathTags, ".xml");
+
+                    char cstr[10] = "";
+                    itoa(count, cstr, 10);
+
+                    strcat(data, "<index>");
+                    strcat(data, cstr);
+                    strcat(data, "</index>");
+
+                    strcat(pathIndex, cstr);
+                    strcat(pathIndex, ".xml");
+
+                    writeFile(pathIndex, data);
+                    writeFile(pathTags, data);
+
                     closesocket(newReq);
                 }
 
@@ -439,7 +551,7 @@ int main() {
                         }
                         printf("%s\n", filePath);
                     } else {
-                        send(newReq, "no_permisson", 100, 0);
+                        send(newReq, "<username>(none)</username><password>(none)</password><token>(none)</token><role>(none)</role>", 100, 0);
                     }
                     closesocket(newReq);
                 }
@@ -477,6 +589,7 @@ int main() {
                     writeFile(filePath, reqBuffer + 28);
                     closesocket(newReq);
                 }
+
                 if (strcmp(reqApi, "deleteProducts") == 0) {
                     printf("accepted\n");
                     char id[100] = "";

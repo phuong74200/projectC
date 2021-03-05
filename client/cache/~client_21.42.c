@@ -22,6 +22,15 @@ SOCKET initSocket;
 
 int initResult;
 
+char accountToken[100] = "";
+
+char glbChar[1000] = "";
+
+void gc(char data[1000]) {
+    memset(glbChar, 0, strlen(glbChar));
+    strcpy(glbChar, data);
+}
+
 char *fetch(char message[200]) {
     initSocket = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -41,7 +50,11 @@ char *fetch(char message[200]) {
 
     send(initSocket, message, strlen(message), 0);
 
-    static char response[40000];
+    static char response[40000] = "";
+
+    for (int i = 0; i < sizeof(response) / sizeof(response[0]); i++) {
+        response[i] = NULL;
+    }
 
     recv(initSocket, &response, 40000, 0);
 
@@ -64,11 +77,6 @@ GtkBuilder *builder;
 void loginScreenDisplay();
 void registerScreenDisplay();
 void landingScreenDisplay();
-
-static void print_hello(GtkWidget *widget, gpointer data) {
-    char *response = fetch("<api>fuong</api>");
-    printf("%s\n", response);
-}
 
 const char *xmlp(char tagName[100], char xmlstr[1000]) {
     char openTag[100] = "";
@@ -130,7 +138,7 @@ const char *myName() {
     return "Flavio";
 }
 
-void loginThread(gpointer data) {
+int loginThread(gpointer data) {
     initSocket = socket(AF_INET, SOCK_STREAM, 0);
 
     struct sockaddr_in address;
@@ -159,6 +167,7 @@ void loginThread(gpointer data) {
 
     printf("%s\n", stat);
     printf("%s\n", token);
+    printf("%s\n", XMLBuffer);
 
     if (strcmp(stat, "login_success") == 0) {
         printf("login sucess\n");
@@ -169,6 +178,8 @@ void loginThread(gpointer data) {
         gtk_label_set_text(button, "Wrong username or password");
         gtk_widget_set_visible(button, TRUE);
     }
+
+    return FALSE;
 }
 
 void loginEvent(GtkWidget *widget, gpointer data) {
@@ -218,7 +229,7 @@ void loginEvent(GtkWidget *widget, gpointer data) {
     }
 
     if (validPassword == 1 && validUsername == 1) {
-        g_thread_new("avail", loginThread, request);
+        gdk_threads_add_idle(loginThread, request);
     } else {
         printf("not valid\n");
         button = gtk_builder_get_object(builder, "loginLog");
@@ -244,15 +255,354 @@ void setForm(char *path, char *id) {
     gtk_container_add(GTK_CONTAINER(mainWindow), form);
 }
 
+GtkBuilder *admin_users_manage_window;
+int userPosition = 0;
+
+GObject *adm_user;
+
+void changeRole(GtkButton *btn, gpointer data) {
+    char value[100] = "";
+    strcpy(value, gtk_button_get_label(btn));
+
+    GtkWidget *target = gtk_grid_get_child_at(adm_user, 1, GPOINTER_TO_INT(data));
+    printf("%s", gtk_label_get_text(target));
+
+    char username[100] = "";
+
+    strcpy(username, gtk_label_get_text(target));
+
+    char request[1000] = "<api>switchRole</api><token>";
+    strcat(request, accountToken);
+    strcat(request, "</token><username>");
+    strcat(request, username);
+    strcat(request, "</username>");
+
+    if (!strcmp(username, "(deleted)") == 0) {
+        if (strcmp(value, "admin") == 0) {
+            gtk_button_set_label(btn, "user");
+        } else {
+            gtk_button_set_label(btn, "admin");
+        }
+        printf("change it\n");
+        fetch(request);
+    }
+}
+
+void none() {
+    return 0;
+}
+
+void deleteUser(GtkButton *btn, gpointer data) {
+    GtkWidget *target = gtk_grid_get_child_at(adm_user, 1, GPOINTER_TO_INT(data));
+    printf("%s", gtk_label_get_text(target));
+
+    char username[100] = "";
+
+    strcpy(username, gtk_label_get_text(target));
+
+    char request[1000] = "<api>deleteUser</api><token>";
+    strcat(request, accountToken);
+    strcat(request, "</token><username>");
+    strcat(request, username);
+    strcat(request, "</username>");
+
+    if (!strcmp(username, "(deleted)") == 0) {
+        printf("delete it\n");
+        fetch(request);
+    }
+
+    GtkWidget *deltarget;
+
+    deltarget = gtk_grid_get_child_at(adm_user, 0, GPOINTER_TO_INT(data));
+    gtk_label_set_text(deltarget, "(deleted)");
+
+    deltarget = gtk_grid_get_child_at(adm_user, 1, GPOINTER_TO_INT(data));
+    gtk_label_set_text(deltarget, "(deleted)");
+
+    deltarget = gtk_grid_get_child_at(adm_user, 2, GPOINTER_TO_INT(data));
+    gtk_label_set_text(deltarget, "(deleted)");
+
+    deltarget = gtk_grid_get_child_at(adm_user, 3, GPOINTER_TO_INT(data));
+    gtk_label_set_text(deltarget, "(deleted)");
+
+    deltarget = gtk_grid_get_child_at(adm_user, 4, GPOINTER_TO_INT(data));
+    gtk_button_set_label(deltarget, "(deleted)");
+
+    deltarget = gtk_grid_get_child_at(adm_user, 5, GPOINTER_TO_INT(data));
+    gtk_button_set_label(deltarget, "unable");
+}
+
+int listLength = 15;
+int currentListLen = 0;
+int loadEnd = 1;
+int deletedUser = 0;
+
+GtkStyleContext *context;
+GtkWidget *slot;
+
+int adm_getUserThread() {
+    initSocket = socket(AF_INET, SOCK_STREAM, 0);
+
+    struct sockaddr_in address;
+
+    address.sin_family = AF_INET;
+    address.sin_port = htons(PORT);
+    address.sin_addr.s_addr = inet_addr(ADDR);
+
+    if (connect(initSocket, (struct sockaddr *)&address, sizeof(address)) < 0) {
+        return "connect_failed";
+    }
+
+    send(initSocket, glbChar, strlen(glbChar), 0);
+
+    gchar XMLBuffer[200];
+
+    recv(initSocket, &XMLBuffer, 2000, 0);
+
+    closesocket(initSocket);
+
+    printf("%s", XMLBuffer);
+
+    int top = atoi(xmlp("index", glbChar)) + 1;
+
+    adm_user = gtk_builder_get_object(admin_users_manage_window, "adm_user_grid");
+
+    if (strcmp(xmlp("username", XMLBuffer), "(none)") != 0 && strlen(XMLBuffer) > 0) {
+        slot = gtk_label_new(xmlp("index", glbChar));
+        gtk_grid_attach(adm_user, slot, 0, top, 1, 1);
+        context = gtk_widget_get_style_context(slot);
+        gtk_style_context_add_class(context, "adm_user_slot");
+        gtk_widget_set_hexpand(slot, TRUE);
+
+        slot = gtk_label_new(xmlp("username", XMLBuffer));
+        gtk_grid_attach(adm_user, slot, 1, top, 1, 1);
+        context = gtk_widget_get_style_context(slot);
+        gtk_style_context_add_class(context, "adm_user_slot");
+        gtk_widget_set_hexpand(slot, TRUE);
+
+        slot = gtk_label_new(xmlp("token", XMLBuffer));
+        gtk_grid_attach(adm_user, slot, 2, top, 1, 1);
+        context = gtk_widget_get_style_context(slot);
+        gtk_style_context_add_class(context, "adm_user_slot");
+        gtk_widget_set_hexpand(slot, TRUE);
+
+        slot = gtk_label_new(xmlp("password", XMLBuffer));
+        gtk_grid_attach(adm_user, slot, 3, top, 1, 1);
+        context = gtk_widget_get_style_context(slot);
+        gtk_style_context_add_class(context, "adm_user_slot");
+        gtk_widget_set_hexpand(slot, TRUE);
+
+        slot = gtk_button_new_with_label(xmlp("role", XMLBuffer));
+        gtk_grid_attach(adm_user, slot, 4, top, 1, 1);
+        g_signal_connect(slot, "clicked", G_CALLBACK(changeRole), GINT_TO_POINTER(top));
+        context = gtk_widget_get_style_context(slot);
+        gtk_style_context_add_class(context, "adm_user_slot_btn");
+        gtk_widget_set_hexpand(slot, TRUE);
+
+        if (strcmp(xmlp("role", XMLBuffer), "user") == 0) {
+            slot = gtk_button_new_with_label("delete");
+            gtk_grid_attach(adm_user, slot, 5, top, 1, 1);
+            g_signal_connect(slot, "clicked", G_CALLBACK(deleteUser), GINT_TO_POINTER(top));
+            context = gtk_widget_get_style_context(slot);
+            gtk_style_context_add_class(context, "adm_user_del_btn");
+            gtk_widget_set_hexpand(slot, TRUE);
+        } else {
+            slot = gtk_button_new_with_label("unable");
+            gtk_grid_attach(adm_user, slot, 5, top, 1, 1);
+            context = gtk_widget_get_style_context(slot);
+            gtk_style_context_add_class(context, "adm_user_del_btn");
+            gtk_widget_set_hexpand(slot, TRUE);
+        }
+    } else {
+        listLength++;
+    }
+
+    printf("buffer: %s\n", XMLBuffer);
+
+    if (userPosition < listLength) {
+        printf("pos: %d\n", userPosition);
+        gchar request[1000] = "<api>getUserList</api><index>";
+        char index[4] = "";
+        itoa(userPosition, index, 10);
+        strcat(request, index);
+        strcat(request, "</index><token>");
+        strcat(request, accountToken);
+        strcat(request, "</token>");
+        gc(request);
+        userPosition++;
+        printf("pos: %s\n", request);
+        gdk_threads_add_timeout(10 + listLength, adm_getUserThread, "");
+    }
+
+    gtk_widget_show_all(adm_user);
+
+    return FALSE;
+}
+
+int scollable = 1;
+
+void enableScroll() {
+    scollable = 1;
+    return FALSE;
+}
+
+void admUserEdgeReach(GtkScrolledWindow *scrolled_window, GtkPositionType pos, gpointer user_data) {
+    if (scollable == 1 && pos == GTK_POS_BOTTOM) {
+        scollable = 0;
+        listLength += 5;
+        gdk_threads_add_timeout(100, adm_getUserThread, "");
+        gdk_threads_add_timeout(500, enableScroll, "");
+    }
+}
+
+addItemThread(gpointer data) {
+    char clstr[1000];
+    char cstr[100];
+    GObject *obj;
+
+    strcpy(clstr, "<name>");
+    obj = gtk_builder_get_object(admin_users_manage_window, "productNameEntry");
+    char name[100];
+    strcat(clstr, gtk_entry_get_text(obj));
+    strcat(clstr, "</name>");
+
+    GdkRGBA *color1;
+
+    strcat(clstr, "<color1>");
+    obj = gtk_builder_get_object(admin_users_manage_window, "color1");
+    gtk_color_chooser_get_rgba(obj, color1);
+    itoa((int)(color1->red * 255), cstr, 10);
+    strcat(clstr, cstr);
+    strcat(clstr, ",");
+    itoa((int)(color1->green * 255), cstr, 10);
+    strcat(clstr, cstr);
+    strcat(clstr, ",");
+    itoa((int)(color1->blue * 255), cstr, 10);
+    strcat(clstr, cstr);
+    strcat(clstr, "</color1>");
+
+    strcat(clstr, "<color2>");
+    obj = gtk_builder_get_object(admin_users_manage_window, "color2");
+    gtk_color_chooser_get_rgba(obj, color1);
+    itoa((int)(color1->red * 255), cstr, 10);
+    strcat(clstr, cstr);
+    strcat(clstr, ",");
+    itoa((int)(color1->green * 255), cstr, 10);
+    strcat(clstr, cstr);
+    strcat(clstr, ",");
+    itoa((int)(color1->blue * 255), cstr, 10);
+    strcat(clstr, cstr);
+    strcat(clstr, "</color2>");
+
+    strcat(clstr, "<color3>");
+    obj = gtk_builder_get_object(admin_users_manage_window, "color3");
+    gtk_color_chooser_get_rgba(obj, color1);
+    itoa((int)(color1->red * 255), cstr, 10);
+    strcat(clstr, cstr);
+    strcat(clstr, ",");
+    itoa((int)(color1->green * 255), cstr, 10);
+    strcat(clstr, cstr);
+    strcat(clstr, ",");
+    itoa((int)(color1->blue * 255), cstr, 10);
+    strcat(clstr, cstr);
+    strcat(clstr, "</color3>");
+
+    obj = gtk_builder_get_object(admin_users_manage_window, "productPriceEntry");
+    strcat(clstr, "<price>");
+    strcat(clstr, gtk_entry_get_text(obj));
+    strcat(clstr, "</price>");
+
+    obj = gtk_builder_get_object(admin_users_manage_window, "productSaleEntry");
+    strcat(clstr, "<sale>");
+    strcat(clstr, gtk_entry_get_text(obj));
+    strcat(clstr, "</sale>");
+
+    obj = gtk_builder_get_object(admin_users_manage_window, "productDescript");
+    strcat(clstr, "<des>");
+    strcat(clstr, gtk_entry_get_text(obj));
+    strcat(clstr, "</des>");
+
+    printf("%s", clstr);
+    return FALSE;
+}
+
+int addItemDelay = 1;
+
+void resetItemDelay() {
+    addItemDelay = 1;
+    GObject *obj = gtk_builder_get_object(admin_users_manage_window, "addItemBtn");
+    gtk_button_set_label(obj, "Add item to shop");
+    return FALSE;
+}
+
+void addItemEvent(gpointer data) {
+    GObject *obj;
+
+    if (addItemDelay == 1) {
+        printf("addItem!");
+        addItemDelay = 0;
+        gdk_threads_add_timeout(100, addItemThread, "");
+        gdk_threads_add_timeout_full(200, 2500, resetItemDelay, "", NULL);
+        obj = gtk_builder_get_object(admin_users_manage_window, "addItemBtn");
+        gtk_button_set_label(obj, "please wait 2.5s");
+
+        int isValid = 0;
+        char *content = "";
+        obj = gtk_builder_get_object(admin_users_manage_window, "productPriceEntry");
+        content = gtk_entry_get_text(obj);
+        for (int i = 0; i < strlen(content); i++) {
+            int isDg = g_ascii_isdigit(content[i]);
+            if (isDg == 0) {
+                isValid++;
+                obj = gtk_builder_get_object(admin_users_manage_window, "saleoutDes");
+                gtk_label_set_text(obj, "Set sale out value (Can't leave blank and must be an integer!)");
+                break;
+            } else {
+                obj = gtk_builder_get_object(admin_users_manage_window, "saleoutDes");
+                gtk_label_set_text(obj, "Set sale out value");
+            }
+        }
+
+        obj = gtk_builder_get_object(admin_users_manage_window, "productNameEntry");
+        content = gtk_entry_get_text(obj);
+        for (int i = 0; i < strlen(content); i++) {
+            int isDg = g_ascii_isdigit(content[i]);
+            int isAl = g_ascii_isalpha(content[i]);
+            int isSp = g_ascii_isspace(content[i]);
+            if (isDg == 0 && isAl == 0 && isSp == 0) {
+                isValid++;
+                obj = gtk_builder_get_object(admin_users_manage_window, "nameDes");
+                gtk_label_set_text(obj, "Name for item (Can't leave blank and not include special characters)");
+                break;
+            } else {
+                obj = gtk_builder_get_object(admin_users_manage_window, "nameDes");
+                gtk_label_set_text(obj, "Name for item");
+            }
+        }
+    }
+}
+
 void admin_users_manage() {
-    GtkBuilder *admin_users_manage_window = gtk_builder_new();
+    userPosition = 0;
+    admin_users_manage_window = gtk_builder_new();
     admin_users_manage_window = gtk_builder_new_from_file("UI\\user_manage.xml");
     GObject *adminWindow = gtk_builder_get_object(admin_users_manage_window, "mainWindow");
+
+    GObject *scollWindow = gtk_builder_get_object(admin_users_manage_window, "adm_scoll_window");
+    g_signal_connect(scollWindow, "edge-reached", G_CALLBACK(admUserEdgeReach), "");
+
+    GObject *addItemBtn = gtk_builder_get_object(admin_users_manage_window, "addItemBtn");
+    g_signal_connect(addItemBtn, "clicked", G_CALLBACK(addItemEvent), "");
+
+    gtk_window_set_modal(adminWindow, TRUE);
     gtk_widget_show_all(adminWindow);
-    char *reponse = "";
-    reponse = fetch("<api>getUserList</api>");
-    printf("open user manager\n");
-    printf("%s\n", reponse);
+    gchar request[1000] = "<api>getUserList</api><index>0</index><token>";
+    strcat(request, accountToken);
+    strcat(request, "</token>");
+    gc(request);
+    if (userPosition <= 1) {
+        gdk_threads_add_timeout(250, adm_getUserThread, "");
+    }
 }
 
 void landingScreenDisplay() {
@@ -266,12 +616,15 @@ void landingScreenDisplay() {
         char userToken[100] = "";
         readFile("appcache\\token.ctf", &userToken);
 
+        strcpy(accountToken, userToken);
+
         char request[200] = "<api>certificate</api><token>";
         strcat(request, userToken);
         strcat(request, "</token>");
 
-        char response[200] = "\0";
-        strcpy(response, fetch(request));
+        char *response = "";
+
+        response = fetch(request);
 
         printf("result of token checking: %s\n", response);
 
