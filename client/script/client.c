@@ -10,7 +10,7 @@
 
 // server's local IPv4 address
 
-#define ADDR "10.1.107.161"
+#define ADDR "192.168.1.10"
 
 void slog(char *content) {
     printf("[client]: %s.\n", content);
@@ -153,7 +153,7 @@ int loginThread(gpointer data) {
 
     send(initSocket, data, strlen(data), 0);
 
-    gchar XMLBuffer[200];
+    gchar XMLBuffer[200] = "";
 
     recv(initSocket, &XMLBuffer, 200, 0);
 
@@ -239,13 +239,11 @@ void loginEvent(GtkWidget *widget, gpointer data) {
 }
 
 void clearAllForms() {
-    GObject *form;
-    form = gtk_builder_get_object(builder, "loginForm");
-    gtk_widget_destroy(form);
-    form = gtk_builder_get_object(builder, "registerForm");
-    gtk_widget_destroy(form);
-    form = gtk_builder_get_object(builder, "landingPage");
-    gtk_widget_destroy(form);
+    GList *children, *iter;
+    children = gtk_container_get_children(GTK_CONTAINER(mainWindow));
+    for (iter = children; iter != NULL; iter = g_list_next(iter))
+        gtk_widget_destroy(GTK_WIDGET(iter->data));
+    g_list_free(children);
 }
 
 void setForm(char *path, char *id) {
@@ -358,7 +356,7 @@ int adm_getUserThread() {
 
         send(initSocket, glbChar, strlen(glbChar), 0);
 
-        gchar XMLBuffer[200];
+        gchar XMLBuffer[200] = "";
 
         recv(initSocket, &XMLBuffer, 2000, 0);
 
@@ -838,11 +836,61 @@ deleteCartItem(GtkWidget *w, gpointer name1) {
     gtk_widget_destroy(wparent);
 }
 
+void confirmOrderThread() {
+}
+
+void confirmOrder() {
+    DIR *d;
+    struct dirent *dir;
+    d = opendir("appcache\\cart");
+    int count = -2;
+    if (d) {
+        while ((dir = readdir(d)) != NULL) {
+            count++;
+            if (count > 0) {
+                char filePath[1000] = "appcache\\cart\\";
+                char request[1000] = "<api>submitOrder</api><index>";
+                strcat(request, dir->d_name);
+                strcat(request, "</index><quantity>");
+
+                char itemQuantity[10] = "0";
+                strcat(filePath, dir->d_name);
+                readFile(filePath, &itemQuantity);
+
+                strcat(request, itemQuantity);
+                strcat(request, "</quantity><token>");
+                strcat(request, accountToken);
+                strcat(request, "</token>");
+
+                if (strcmp(itemQuantity, "0") != 0) {
+                    initSocket = socket(AF_INET, SOCK_STREAM, 0);
+                    struct sockaddr_in address;
+                    address.sin_family = AF_INET;
+                    address.sin_port = htons(PORT);
+                    address.sin_addr.s_addr = inet_addr(ADDR);
+                    if (connect(initSocket, (struct sockaddr *)&address, sizeof(address)) < 0) {
+                        return "connect_failed";
+                    }
+                    send(initSocket, request, strlen(request), 0);
+                    gchar XMLBuffer[200] = "";
+                    recv(initSocket, &XMLBuffer, 200, 0);
+                    closesocket(initSocket);
+                }
+            }
+        }
+        closedir(d);
+    }
+}
+
 void user_cart_event() {
     user_cart = gtk_builder_new();
     user_cart = gtk_builder_new_from_file("UI\\cart.xml");
     GObject *user_cart_window = gtk_builder_get_object(user_cart, "user_cartWindow");
     GtkWidget *user_cart_grid = gtk_builder_get_object(user_cart, "user_cart");
+
+    GtkWidget *cart_confirm_btn = gtk_builder_get_object(user_cart, "cart_confirm_btn");
+    g_signal_connect(cart_confirm_btn, "clicked", G_CALLBACK(confirmOrder), "");
+
     gtk_window_set_modal(user_cart_window, TRUE);
     gtk_widget_show_all(user_cart_window);
 
@@ -920,7 +968,7 @@ void addItemToCartThread(gpointer top) {
 
     char filePath[1000] = "appcache\\cart\\";
 
-    char sindex[2] = "";
+    char sindex[10] = "";
 
     itoa(index, sindex, 10);
 
@@ -966,13 +1014,29 @@ int addProductsThread(gpointer top) {
     strcat(request, sindex);
     strcat(request, "</index>");
 
-    char *response = "";
+    initSocket = socket(AF_INET, SOCK_STREAM, 0);
 
-    response = fetch(request);
+    struct sockaddr_in address;
+
+    address.sin_family = AF_INET;
+    address.sin_port = htons(PORT);
+    address.sin_addr.s_addr = inet_addr(ADDR);
+
+    if (connect(initSocket, (struct sockaddr *)&address, sizeof(address)) < 0) {
+        return "connect_failed";
+    }
+
+    send(initSocket, request, strlen(request), 0);
+
+    gchar response[200] = "";
+
+    recv(initSocket, &response, 200, 0);
+
+    closesocket(initSocket);
 
     printf("%s\n", response);
 
-    if (strcmp(response, "none") != 0) {
+    if (strcmp(response, "none") != 0 && strlen(xmlp("name", response)) > 0) {
         GObject *productContainer;
         GObject *productForm;
         GObject *obj;
@@ -1028,6 +1092,144 @@ int addProductsThread(gpointer top) {
     return FALSE;
 }
 
+GtkBuilder *adm_order_builder;
+GObject *adm_order_window;
+GObject *adm_order_grid;
+
+int currentOrderPos = 0;
+int maxOrderPos = 15;
+
+void resolveOrder(GtkWidget *self, char orderToken[1000]) {
+    GtkWidget *parent = gtk_widget_get_parent(self);
+    gtk_widget_hide(parent);
+
+    char request[1000] = "<api>resolveOrder</api><token>";
+    strcat(request, accountToken);
+    strcat(request, "</token><orderToken>");
+    strcat(request, orderToken);
+    strcat(request, "</orderToken>");
+
+    fetch(request);
+}
+
+int ad_order_loadThread(gpointer pos) {
+    int position = GPOINTER_TO_INT(pos);
+
+    char posStr[100] = "";
+    itoa(position, posStr, 10);
+
+    char request[1000] = "<api>adm_getOrder</api><token>";
+    strcat(request, accountToken);
+    strcat(request, "</token><pos>");
+    strcat(request, posStr);
+    strcat(request, "</pos>");
+
+    initSocket = socket(AF_INET, SOCK_STREAM, 0);
+    struct sockaddr_in address;
+    address.sin_family = AF_INET;
+    address.sin_port = htons(PORT);
+    address.sin_addr.s_addr = inet_addr(ADDR);
+    if (connect(initSocket, (struct sockaddr *)&address, sizeof(address)) < 0) {
+        return "connect_failed";
+    }
+    send(initSocket, request, strlen(request), 0);
+    gchar XMLBuffer[2000] = "";
+    recv(initSocket, &XMLBuffer, 200, 0);
+    closesocket(initSocket);
+
+    printf("%s\n", XMLBuffer);
+
+    if (strlen(xmlp("username", XMLBuffer)) > 0) {
+        char *token;
+        char *rest = xmlp("items", XMLBuffer);
+        GtkStyleContext *context;
+
+        GtkWidget *container = gtk_grid_new();
+        gtk_grid_set_row_homogeneous(container, TRUE);
+        gtk_grid_set_column_homogeneous(container, TRUE);
+
+        GtkWidget *dataGrid = gtk_grid_new();
+        gtk_grid_attach(container, dataGrid, 0, 1, 1, 1);
+        gtk_grid_set_column_homogeneous(dataGrid, TRUE);
+        gtk_widget_set_hexpand(dataGrid, TRUE);
+
+        int top = 0;
+        int sum = 0;
+
+        while ((token = strtok_r(rest, ";", &rest))) {
+            int left = 1;
+            char *childTok;
+
+            int quant = 0;
+            int cons = 0;
+
+            while ((childTok = strtok_r(token, ",", &token))) {
+                GtkWidget *label = gtk_label_new(childTok);
+                gtk_label_set_xalign(label, 0);
+                gtk_grid_attach(dataGrid, label, left, top, 1, 1);
+                context = gtk_widget_get_style_context(label);
+                if (top == 0) {
+                    gtk_style_context_add_class(context, "order_label-header");
+                } else {
+                    gtk_style_context_add_class(context, "order_label");
+                }
+                if (left == 2) {
+                    quant = atoi(childTok);
+                }
+                if (left == 3) {
+                    cons = atoi(childTok);
+                }
+                left++;
+            }
+            sum += quant * cons;
+            top++;
+        }
+
+        char money[100] = "$";
+        char sumStr[100] = "";
+        itoa(sum, sumStr, 10);
+        strcat(money, sumStr);
+
+        GtkWidget *usernameLabel = gtk_label_new(xmlp("username", XMLBuffer));
+        context = gtk_widget_get_style_context(usernameLabel);
+        gtk_style_context_add_class(context, "order_label-header");
+        gtk_grid_attach(dataGrid, usernameLabel, 0, 0, 1, top - 3);
+
+        GtkWidget *consumeLabel = gtk_label_new(money);
+        context = gtk_widget_get_style_context(consumeLabel);
+        gtk_style_context_add_class(context, "order_label-sum");
+        gtk_grid_attach(dataGrid, consumeLabel, 0, top - 3, 1, 2);
+
+        GtkWidget *resolveBtn = gtk_button_new_with_label("resolve now");
+        context = gtk_widget_get_style_context(resolveBtn);
+        gtk_style_context_add_class(context, "order_label-resolve");
+        gtk_grid_attach(dataGrid, resolveBtn, 0, top - 1, 1, 1);
+        g_signal_connect(resolveBtn, "clicked", G_CALLBACK(resolveOrder), xmlp("token", XMLBuffer));
+
+        gtk_grid_attach(adm_order_grid, container, 0, position, 1, 1);
+        gtk_widget_show_all(adm_order_grid);
+    }
+
+    if (currentOrderPos < maxOrderPos) {
+        currentOrderPos++;
+        printf("%d\n", currentOrderPos);
+        gdk_threads_add_timeout(100, ad_order_loadThread, GINT_TO_POINTER(currentOrderPos));
+    }
+
+    return FALSE;
+}
+
+void ad_order_display() {
+    currentOrderPos = 0;
+    adm_order_builder = gtk_builder_new();
+    adm_order_builder = gtk_builder_new_from_file("UI\\orders.xml");
+    adm_order_window = gtk_builder_get_object(adm_order_builder, "mainWindow");
+    adm_order_grid = gtk_builder_get_object(adm_order_builder, "mainGrid");
+    gtk_window_set_modal(adm_order_window, TRUE);
+    gtk_widget_show_all(adm_order_window);
+    gdk_threads_add_timeout(100, ad_order_loadThread, GINT_TO_POINTER(currentOrderPos));
+}
+
 void user_cart_event();
 
 void landingScreenDisplay() {
@@ -1065,6 +1267,7 @@ void landingScreenDisplay() {
                 g_signal_connect(button, "clicked", G_CALLBACK(admin_users_manage), NULL);
 
                 button = gtk_builder_get_object(builder, "ad_products");
+                g_signal_connect(button, "clicked", G_CALLBACK(ad_order_display), NULL);
                 gtk_widget_show(button);
             }
             printf("token accepted\n");
@@ -1072,7 +1275,7 @@ void landingScreenDisplay() {
     }
 
     for (int i = 0; i < 20; i++) {
-        gdk_threads_add_timeout(100 + i * 10, addProductsThread, GINT_TO_POINTER(i));
+        gdk_threads_add_idle(addProductsThread, GINT_TO_POINTER(i));
     }
 
     button = gtk_builder_get_object(builder, "cartBtn");

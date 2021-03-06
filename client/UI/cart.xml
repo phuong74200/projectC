@@ -124,7 +124,7 @@
             <property name="row-homogeneous">True</property>
             <property name="column-homogeneous">True</property>
             <child>
-              <object class="GtkButton">
+              <object class="GtkButton" id="cart_confirm_btn">
                 <property name="label" translatable="yes">Confirm</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>

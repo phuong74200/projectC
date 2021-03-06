@@ -487,3 +487,41 @@
 .product-show-case {
     margin-bottom: 40px;
 }
+
+.order-scroll {
+    background: #F6F7FB;
+}
+
+.order_header {
+    background: white;
+    padding: 16px;
+}
+
+.order_label-header {
+    background: #393D46;
+    color: #F6F7FB;
+    padding: 16px;
+}
+
+.order_label-sum {
+    background: #0074D9;
+    color: #7FDBFF;
+    padding: 16px;
+}
+
+.order_label-resolve {
+    background: #2ECC40;
+    padding: 16px;
+    box-shadow: none;
+    border: 0px;
+    border-radius: 0px;
+}
+
+.order_label-resolve:hover {
+    background: #01FF70;
+}
+
+.order_label {
+    background: #F6F7FB;
+    padding: 16px;
+}
