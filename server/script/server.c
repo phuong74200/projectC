@@ -278,7 +278,6 @@ int main() {
                     if (d) {
                         while ((dir = readdir(d)) != NULL) {
                             count++;
-                            printf("%d\n", count);
                         }
                         closedir(d);
                     }
