@@ -54,3 +54,6 @@
             + <root>\server\server.exe
             + <root>\client\client.exe
         Chỉ cần chạy 2 file này là được
+# Tài khoản admin:
+    - username: fuong74200
+    - password: 123456
