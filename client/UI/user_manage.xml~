@@ -511,7 +511,7 @@
             </child>
             <child>
               <object class="GtkScrolledWindow" id="adm_scoll_window1">
-                <property name="width-request">1280</property>
+                <property name="width-request">1270</property>
                 <property name="height-request">600</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
@@ -525,7 +525,7 @@
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <child>
-                      <!-- n-columns=8 n-rows=3 -->
+                      <!-- n-columns=7 n-rows=3 -->
                       <object class="GtkGrid" id="adm_product_grid">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
@@ -581,7 +581,7 @@
                             <property name="label" translatable="yes">delete</property>
                           </object>
                           <packing>
-                            <property name="left-attach">6</property>
+                            <property name="left-attach">5</property>
                             <property name="top-attach">0</property>
                           </packing>
                         </child>
@@ -594,7 +594,7 @@
                             <property name="label" translatable="yes">save</property>
                           </object>
                           <packing>
-                            <property name="left-attach">5</property>
+                            <property name="left-attach">4</property>
                             <property name="top-attach">0</property>
                           </packing>
                         </child>
@@ -618,31 +618,13 @@
                             <property name="can-focus">False</property>
                             <property name="hexpand">True</property>
                             <property name="vexpand">True</property>
-                            <property name="label" translatable="yes">stocks</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">4</property>
-                            <property name="top-attach">0</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="hexpand">True</property>
-                            <property name="vexpand">True</property>
                             <property name="label" translatable="yes">color</property>
+                            <property name="xalign">0.5</property>
                           </object>
                           <packing>
-                            <property name="left-attach">7</property>
+                            <property name="left-attach">6</property>
                             <property name="top-attach">0</property>
                           </packing>
-                        </child>
-                        <child>
-                          <placeholder/>
-                        </child>
-                        <child>
-                          <placeholder/>
                         </child>
                         <child>
                           <placeholder/>

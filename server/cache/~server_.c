@@ -248,6 +248,87 @@ int main() {
                     closesocket(newReq);
                 }
 
+                if (strcmp(reqApi, "updateProduct") == 0) {
+                    char index[100] = "";
+                    parseXML("index", reqBuffer, &index);
+                    char filePath[1000] = "database\\products_index\\";
+                    strcat(filePath, index);
+                    strcat(filePath, ".xml");
+
+                    printf("%s\n", filePath);
+
+                    if (checkFile(filePath) == 1) {
+                        char new[1000] = "";
+
+                        char c1[100] = "";
+                        char c2[100] = "";
+                        char c3[100] = "";
+                        char des[1000] = "";
+
+                        char data[1000] = "";
+                        readFile(filePath, &data);
+
+                        parseXML("color1", data, &c1);
+                        parseXML("color2", data, &c2);
+                        parseXML("color3", data, &c3);
+                        parseXML("des", data, &des);
+
+                        strcat(new, "<color1>");
+                        strcat(new, c1);
+                        strcat(new, "</color1>");
+
+                        strcat(new, "<color2>");
+                        strcat(new, c2);
+                        strcat(new, "</color2>");
+
+                        strcat(new, "<color3>");
+                        strcat(new, c3);
+                        strcat(new, "</color3>");
+
+                        strcat(new, "<des>");
+                        strcat(new, des);
+                        strcat(new, "</des>");
+
+                        strcat(new, reqBuffer);
+
+                        writeFile(filePath, new);
+                    }
+                    closesocket(newReq);
+                }
+
+                if (strcmp(reqApi, "search") == 0) {
+                    char keyword[100] = "";
+                    char response[100] = "";
+                    parseXML("keys", reqBuffer, &keyword);
+
+                    DIR *d;
+                    struct dirent *dir;
+                    d = opendir("database\\products_tags");
+                    int count = -2;
+                    if (d) {
+                        while ((dir = readdir(d)) != NULL) {
+                            count++;
+
+                            char path[1000] = "database\\products_tags\\";
+                            strcat(path, dir->d_name);
+
+                            if (count >= 0) {
+                                if (strstr(dir->d_name, keyword) != NULL) {
+                                    char data[1000] = "";
+                                    readFile(path, &data);
+                                    char index[100] = "";
+                                    parseXML("index", data, &index);
+                                    strcat(response, index);
+                                    strcat(response, ";");
+                                }
+                            }
+                        }
+                        closedir(d);
+                    }
+                    send(newReq, response, sizeof(response), 0);
+                    closesocket(newReq);
+                }
+
                 if (strcmp(reqApi, "getProduct") == 0) {
                     char index[10];
                     char filePath[1000] = "database\\products_index\\";
@@ -278,7 +359,6 @@ int main() {
                     if (d) {
                         while ((dir = readdir(d)) != NULL) {
                             count++;
-                            printf("%d\n", count);
                         }
                         closedir(d);
                     }
@@ -335,7 +415,6 @@ int main() {
 
                     strcat(pathTags, tag);
                     strcat(pathTags, name);
-                    strcat(pathTags, randstring(4));
                     strcat(pathTags, ".xml");
 
                     char cstr[10] = "";

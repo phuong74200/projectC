@@ -304,13 +304,54 @@
 }
 
 .adm_user_slot {
-    margin-top: 20px;
+    padding: 16px;
+}
+
+.adm_user_slot-index {
+    background: #393D46;
+    color: #F6F7FB;
+    margin: 16px;
+}
+
+.adm_user_slot-entry {
+    border: 2px solid #393D46;
+    background: #F6F7FB;
     color: #393D46;
     box-shadow: none;
     border-radius: 0px;
-    min-width: 80px;
-    min-height: 40px;
-    transition: all .1s;
+    margin: 16px;
+}
+
+.adm_user_slot-save {
+    border: 0px;
+    box-shadow: none;
+    border-radius: 0px;
+    background: #01FF70;
+    margin: 16px;
+}
+
+.adm_user_slot-save:hover {
+    background: #2ECC40;
+}
+
+.adm_user_slot-col {
+    margin: 16px;
+    border: 0px;
+    box-shadow: none;
+    border-radius: 0px;
+    background: linear-gradient(to right, #a770ef, #cf8bf3, #fdb99b);
+}
+
+.adm_user_slot-del {
+    margin: 16px;
+    border: 0px;
+    box-shadow: none;
+    border-radius: 0px;
+    background: #FF4136;
+}
+
+.adm_user_slot-del:hover {
+    background: #FF851B;
 }
 
 .adm_user_slot_btn {
