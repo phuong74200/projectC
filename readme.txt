@@ -52,5 +52,5 @@
             $ gcc script\server.c -o server.exe -lwsock32
         + Sau khi chạy xong 2 file này sẽ xuất hiện lần lượt 2 file:
             + <root>\server\server.exe
-            + <root>\server\client.exe
+            + <root>\client\client.exe
         Chỉ cần chạy 2 file này là được
