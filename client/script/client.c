@@ -509,6 +509,22 @@ int updateProduct(GtkWidget *w, int top) {
     return FALSE;
 }
 
+void delProduct(GtkWidget *w, int top) {
+    char clstr[1000];
+    GObject *obj;
+    for (int i = 0; i <= 8; i++) {
+        obj = gtk_grid_get_child_at(adm_product_grid, i, top);
+        gtk_widget_hide(obj);
+    }
+    obj = gtk_grid_get_child_at(adm_product_grid, 0, top);
+    strcat(clstr, "<index>");
+    strcat(clstr, gtk_label_get_text(obj));
+    strcat(clstr, "</index>");
+    strcat(clstr, "<api>delProduct</api>");
+
+    fetch(clstr);
+}
+
 int adm_getProductList() {
     if (getproducts_end == 1) {
         getproducts_end = 0;
@@ -561,6 +577,7 @@ int adm_getProductList() {
             gtk_grid_attach(adm_product_grid, slot, 5, top, 1, 1);
             context = gtk_widget_get_style_context(slot);
             gtk_style_context_add_class(context, "adm_user_slot-del");
+            g_signal_connect(slot, "clicked", G_CALLBACK(delProduct), top);
 
             slot = gtk_button_new_with_label("save");
             gtk_grid_attach(adm_product_grid, slot, 4, top, 1, 1);

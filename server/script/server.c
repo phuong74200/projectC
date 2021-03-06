@@ -164,6 +164,17 @@ int main() {
                     closesocket(newReq);
                 }
 
+                if (strcmp(reqApi, "delProduct") == 0) {
+                    char filePath[100] = "database\\products_index\\";
+                    char index[100] = "";
+                    parseXML("index", reqBuffer, &index);
+                    strcat(filePath, index);
+                    strcat(filePath, ".xml");
+                    if (checkFile(filePath) == 1) {
+                        remove(filePath);
+                    }
+                }
+
                 if (strcmp(reqApi, "getProducts") == 0) {
                     printf("accepted\n");
                     char products[100] = "";
