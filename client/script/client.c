@@ -10,7 +10,7 @@
 
 // server's local IPv4 address
 
-#define ADDR "192.168.1.10"
+#define ADDR "192.168.43.62"
 
 void slog(char *content) {
     printf("[client]: %s.\n", content);
@@ -976,7 +976,6 @@ void confirmOrder(GtkWidget *w, GtkWidget *user_cart_grid) {
 
                 char itemQuantity[10] = "0";
                 strcat(filePath, dir->d_name);
-                remove(filePath);
                 readFile(filePath, &itemQuantity);
 
                 strcat(request, itemQuantity);
